@@ -1,69 +1,83 @@
-```ZSH
-~/Desktop/tesi/LCSAJdump main* LCSAJdump ❯ time python main.py ../test/level2/vuln
-[*] Analisi LCSAJ ROP su: ../test/level2/vuln
-[*] Caricamento binario: ../test/level2/vuln
-[*] Sezione .text trovata.
-    Dimensione: 258236 bytes
-    Indirizzo Base: 0x10250
-[*] Avvio disassemblaggio con Capstone...
-[*] Disassemblaggio completato. 89354 istruzioni estratte.
-[*] Costruzione Nodi LCSAJ...
-[*] Costruzione Archi (Collegamenti)...
-[*] Grafo Completo. Nodi: 19568, Archi inversi mappati.
-[*] Avvio Rainbow BFS dai 1714 sink...
-[*] Ricerca completata. Trovati 2865 gadget.
+# 🌈 RISC-V LCSAJ ROP Finder (Rainbow Search)
 
-[*] Calcolo Ranking e filtraggio...
---- Top 5 Gadgets by Quality Score ---
+Questo tool è un estrattore avanzato di gadget **ROP (Return Oriented Programming)** progettato specificamente per l'architettura **RISC-V**. A differenza dei tool standard che utilizzano scansioni lineari, questo software modella il binario come un grafo di sequenze **LCSAJ (Linear Code Sequence and Jump)** per identificare catene di esecuzione complesse e non contigue.
 
-RANK #1 | SCORE: 160 | BLOCKS: 2
-----------------------------------------
-  🎯 0x4078a: c.beqz     a0, -0x32
-      |
-  🎯 0x4078c: c.ldsp     a0, 0x20(sp)
-  🔗 0x4078e: c.ldsp     ra, 0x58(sp)
-     0x40790: c.addi16sp sp, 0x60
-  🔴 0x40792: c.jr       ra
+---
 
-RANK #2 | SCORE: 160 | BLOCKS: 2
-----------------------------------------
-  🎯 0x460b6: c.bnez     a0, 0xa
-      |
-  🔗 0x460b8: c.ldsp     ra, 0x38(sp)
-  🎯 0x460ba: c.ldsp     a0, 0x20(sp)
-     0x460bc: c.addi16sp sp, 0x40
-  🔴 0x460be: c.jr       ra
+### 🏛️ Architettura e Logica Core
 
-RANK #3 | SCORE: 160 | BLOCKS: 2
-----------------------------------------
-  🎯 0x460e4: c.bnez     a0, 0xa
-      |
-  🔗 0x460e6: c.ldsp     ra, 0x38(sp)
-  🎯 0x460e8: c.ldsp     a0, 0x20(sp)
-     0x460ea: c.addi16sp sp, 0x40
-  🔴 0x460ec: c.jr       ra
+Il tool trasforma un binario ELF in una lista di "armi" (gadget) classificate per utilità semantica attraverso quattro fasi:
 
-RANK #4 | SCORE: 160 | BLOCKS: 2
-----------------------------------------
-  🎯 0x4618a: c.bnez     a0, 0xa
-      |
-  🔗 0x4618c: c.ldsp     ra, 0x28(sp)
-  🎯 0x4618e: c.ldsp     a0, 0x10(sp)
-     0x46190: c.addi16sp sp, 0x30
-  🔴 0x46192: c.jr       ra
+1. **Loader (Capstone + Pyelftools):** Estrae la sezione `.text` e disassembla le istruzioni. Supporta nativamente l'estensione **Compressed (C)** di RISC-V, raddoppiando la densità dei gadget permettendo l'allineamento a 2-byte.
+2. **LCSAJ Decomposer:** Invece di singole istruzioni, il tool lavora su blocchi logici che terminano con un'istruzione di salto o ritorno.
+3. **Graph Builder (Reverse CFG):** Costruisce una mappa inversa delle connessioni tra i blocchi, risolvendo i salti diretti e i fallthrough.
+4. **Rainbow BFS Finder:** Un algoritmo di ricerca a ritroso che esplora i percorsi dai "sink" (le istruzioni `RET`) verso l'alto.
 
-RANK #5 | SCORE: 160 | BLOCKS: 2
-----------------------------------------
-  🎯 0x461b4: c.bnez     a0, 0xa
-      |
-  🔗 0x461b6: c.ldsp     ra, 0x28(sp)
-  🎯 0x461b8: c.ldsp     a0, 0x10(sp)
-     0x461ba: c.addi16sp sp, 0x30
-  🔴 0x461bc: c.jr       ra
-python main.py ../test/level2/vuln  1,50s user 0,33s system 99% cpu 1,823 total
+---
+
+### 🧠 Problemi Riscontrati e Soluzioni (Timeline)
+
+Durante lo sviluppo abbiamo affrontato e risolto sfide critiche che rendono questo tool superiore a una semplice implementazione BFS:
+
+#### 1. Il Problema del "Vibecoding" (Cecità Logica)
+
+* **Problema:** Gli scanner lineari ignorano i salti condizionali. Se un gadget utile è preceduto da un `BEQ` che non viene preso, lo scanner lineare lo perde.
+* **Soluzione:** Utilizzo dei blocchi **LCSAJ**. Il tool vede le "strade" possibili nel grafo, catturando sequenze che attraversano i confini dei blocchi base.
+
+#### 2. L'Esplosione Combinatoria (Nodi Hub)
+
+* **Problema:** In binari grandi come la `libc`, alcune funzioni comuni vengono chiamate da migliaia di punti, mandando la memoria in crash (state space explosion).
+* **Soluzione:** **Frequency-Based Pruning (Rainbow Pruning)**. Ogni nodo ha un contatore di "oscurità". Se un blocco viene attraversato troppe volte, l'algoritmo lo "scurisce" e taglia il ramo, preservando la RAM e la velocità.
+
+#### 3. Il "Diamond Problem" (Perdita di Percorsi)
+
+* **Problema:** Una BFS classica con colori globali scarta i nodi già visitati, perdendo gadget validi che condividono un blocco comune.
+* **Soluzione:** **Stateful Path Exploration**. Ogni "raggio di luce" (percorso) porta con sé la propria storia locale, permettendo al tool di trovare più "sfumature" (percorsi diversi) che passano per lo stesso nodo.
+
+#### 4. La Severità del Grafo (Archi Mancanti)
+
+* **Problema:** Inizialmente il grafo collegava solo i salti che puntavano all'inizio di un blocco. Molti salti però finiscono "nel mezzo" di un blocco LCSAJ.
+* **Soluzione:** **Intra-Block Mapping**. Abbiamo implementato una mappa `instruction-to-block` che permette di collegare un salto a qualunque punto del blocco di appartenenza, aumentando drasticamente il numero di archi mappati (da ~1.400 a ~8.800+ gadget trovati).
+
+---
+
+### 📊 Performance e Risultati (Real-World Test)
+
+L'ultima analisi eseguita sulla **`libc.so.6` (RISC-V 64-bit)** dimostra l'efficienza del sistema:
+
+| Metrica | Risultato |
+| --- | --- |
+| **Istruzioni analizzate** | ~291.793 |
+| **Nodi LCSAJ generati** | 66.492 |
+| **Gadget identificati** | **8.867** |
+| **Tempo di esecuzione** | **~5.3 secondi** |
+| **Efficacia CPU** | 99% |
+
+---
+
+### 🏆 Sistema di Scoring Semantico
+
+Per gestire migliaia di risultati, il tool utilizza una formula di ranking per isolare i gadget di "Serie A":
+
+* **Bonus Chaining (+50):** Assegnato se il gadget controlla il registro `ra` (permette di concatenare altri gadget).
+* **Bonus Argument (+40):** Assegnato se il gadget carica dati in `a0`, `a1`, etc. (fondamentale per chiamare `system()`).
+* **Penalty Noise:** Riduce il punteggio per ogni istruzione extra che "sporca" l'esecuzione.
+
+---
+
+### 🚀 Come Utilizzarlo
+
+1. Assicurati di avere le dipendenze: `pip install capstone pyelftools networkx click`.
+2. Lancia l'analisi:
+```bash
+python main.py /path/to/riscv/binary
 
 ```
 
-Score=100−(Lblocks​×10)−(Linsns​×2)+Bonus−Malus
 
+3. I risultati verranno mostrati a video (Top 10) e salvati integralmente in `gadgets_found.txt`.
+
+---
+
+**Sviluppato per:** Tesi di Laurea - Analisi della Code Reuse Vulnerability su Architetture RISC-V.
 
