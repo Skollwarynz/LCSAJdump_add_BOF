@@ -1,16 +1,21 @@
 import collections
 
 class RainbowFinder:
-    def __init__(self, graph_manager):
+    # Aggiungiamo i parametri al costruttore con dei default
+    def __init__(self, graph_manager, max_depth, max_darkness):
         self.gm = graph_manager
         self.gadgets = []
-        self.MAX_DEPTH = 12
-        self.MAX_DARKNESS = 30
+        
+        # Ora usiamo i valori passati da fuori
+        self.MAX_DEPTH = max_depth
+        self.MAX_DARKNESS = max_darkness
 
     def score_gadget(self, path):
         score = 100
         full_insns = []
-        for addr in path: full_insns.extend(self.gm.addr_to_node[addr]['insns'])
+        for addr in path: 
+            if addr in self.gm.addr_to_node:
+                full_insns.extend(self.gm.addr_to_node[addr]['insns'])
         
         score -= (len(path) * 10) + (len(full_insns) * 2)
         
@@ -19,9 +24,17 @@ class RainbowFinder:
         
         if has_ra: score += 50
         if has_a0: score += 40
+        
+        # Penalità JOP (Salti a registro non-ra)
+        if full_insns:
+            last = full_insns[-1]
+            if last.mnemonic in ['jr', 'jalr', 'c.jr', 'c.jalr'] and 'ra' not in last.op_str:
+                 score -= 20
+
         return score
 
     def search(self):
+        print(f"[*] Configurazione Rainbow: Depth={self.MAX_DEPTH}, Darkness={self.MAX_DARKNESS}")
         tails = self.gm.get_gadget_tails()
         queue = collections.deque([([t['start']], {t['start']}) for t in tails])
         node_darkness = collections.defaultdict(int)
@@ -44,10 +57,20 @@ class RainbowFinder:
         print(f"[*] Pruning effettuato: {pruned} rami tagliati 🌈")
         return self.gadgets
 
-    def print_gadgets(self, limit=10):
-        scored = sorted([(self.score_gadget(g), g) for g in self.gadgets], key=lambda x: x[0], reverse=True)
+    def print_gadgets(self, limit, min_score):
+        # Aggiungiamo il filtro min_score qui
+        scored = []
+        for g in self.gadgets:
+            s = self.score_gadget(g)
+            if s >= min_score:
+                scored.append((s, g))
+        
+        scored.sort(key=lambda x: x[0], reverse=True)
+        
+        print(f"\n--- Visualizzazione Top {limit} (Min Score: {min_score}) ---")
         for i, (s, p) in enumerate(scored[:limit]):
             print(f"\nRANK #{i+1} | SCORE: {s}")
             for addr in p:
-                for insn in self.gm.addr_to_node[addr]['insns']:
-                    print(f"  {hex(insn.address)}: {insn.mnemonic} {insn.op_str}")
+                node = self.gm.addr_to_node[addr]
+                for insn in node['insns']:
+                     print(f"  {hex(insn.address)}: {insn.mnemonic} {insn.op_str}")
