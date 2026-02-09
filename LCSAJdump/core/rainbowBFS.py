@@ -4,50 +4,67 @@ class RainbowFinder:
     def __init__(self, graph_manager):
         self.gm = graph_manager
         self.gadgets = []
-        
-        # --- PARAMETRI RAINBOW ---
-        self.MAX_DEPTH = 8          # Lunghezza massima del gadget (blocchi)
-        self.MAX_DARKNESS = 50      # Saturazione: quante volte posso passare per un nodo?
+        self.MAX_DEPTH = 8
+        self.MAX_DARKNESS = 50
 
-    def is_gadget_useful(self, path):
+    def score_gadget(self, path):
         """
-        Analisi Semantica Semplificata:
-        Il gadget fa qualcosa di utile per un attaccante?
+        Assegna un punteggio di qualità al gadget.
+        Più alto è il punteggio, più il gadget è utile e pulito.
         """
+        score = 100
         full_insns = []
         for addr in path:
-            if addr in self.gm.addr_to_node:
-                node = self.gm.addr_to_node[addr]
-                full_insns.extend(node['insns'])
+            node = self.gm.addr_to_node[addr]
+            full_insns.extend(node['insns'])
 
-        has_load = False
-        has_stack_move = False
-        touches_argument_regs = False 
-        
+        # --- 1. PENALITÀ LUNGHEZZA ---
+        score -= (len(path) * 10)       # Penalità blocchi
+        score -= (len(full_insns) * 2)  # Penalità numero istruzioni
+
+        # --- 2. ANALISI SEMANTICA ---
+        has_ra_control = False
+        has_arg_control = False
+        danger_zone = False
+
         for insn in full_insns:
             mnem = insn.mnemonic.lower()
             ops = insn.op_str.lower()
-            
-            if mnem in ['ld', 'lw', 'c.ld', 'c.lw', 'c.ldsp'] and 'sp' in ops:
-                has_load = True
-            
-            if 'sp' in ops and ('addi' in mnem or 'c.addi' in mnem):
-                has_stack_move = True
-                
-            if any(reg in ops for reg in ['a0', 'a1', 'a2', 'a3']):
-                touches_argument_regs = True
 
-        return (has_load or has_stack_move) and touches_argument_regs
+            # Bonus: Controllo del Return Address (Chaining)
+            if mnem in ['ld', 'c.ldsp'] and 'ra' in ops and 'sp' in ops:
+                has_ra_control = True
+            
+            # Bonus: Controllo argomenti (a0-a3)
+            if mnem in ['ld', 'lw', 'c.ldsp', 'c.lwsp'] and any(reg in ops for reg in ['a0', 'a1', 'a2']):
+                if 'sp' in ops: has_arg_control = True
+
+            # Malus: Uso di registri pericolosi o instabili
+            if any(reg in ops for reg in ['tp', 'gp', 'zero']):
+                danger_zone = True
+
+        if has_ra_control: score += 50
+        if has_arg_control: score += 40
+        if danger_zone: score -= 30
+
+        # Malus: JOP (salto a registro) è meno immediato di ROP (ret)
+        last_mnem = full_insns[-1].mnemonic.lower()
+        if 'jr' in last_mnem or 'jalr' in last_mnem:
+            if 'ra' not in full_insns[-1].op_str:
+                score -= 20
+
+        return score
+
+    def is_gadget_useful(self, path):
+        # Usiamo lo score come filtro: un gadget con score basso è "rumore"
+        return self.score_gadget(path) > 40
 
     def search(self):
         print(f"[*] Avvio Rainbow BFS dai {len(self.gm.get_gadget_tails())} sink...")
         tails = self.gm.get_gadget_tails()
         queue = collections.deque()
-        
         for t in tails:
-            path = [t['start']]
-            visited = {t['start']}
-            queue.append((path, visited))
+            queue.append(([t['start']], {t['start']}))
 
         node_darkness = collections.defaultdict(int)
         processed_paths = 0
@@ -60,62 +77,48 @@ class RainbowFinder:
             if len(curr_path) > 1:
                 self.gadgets.append(curr_path)
 
-            if len(curr_path) >= self.MAX_DEPTH:
-                continue
+            if len(curr_path) >= self.MAX_DEPTH: continue
 
             parents = self.gm.reverse_graph.get(head_addr, [])
             for parent_addr in parents:
-                if parent_addr in curr_visited:
-                    continue
-
-                if node_darkness[parent_addr] >= self.MAX_DARKNESS:
-                    continue
+                if parent_addr in curr_visited: continue
+                if node_darkness[parent_addr] >= self.MAX_DARKNESS: continue
                 
                 node_darkness[parent_addr] += 1
                 new_path = [parent_addr] + curr_path
-                new_visited = curr_visited.copy()
-                new_visited.add(parent_addr)
-                queue.append((new_path, new_visited))
+                queue.append((new_path, curr_visited | {parent_addr}))
 
-        print(f"[*] Ricerca completata. Processati {processed_paths} percorsi.")
-        print(f"[*] Trovati {len(self.gadgets)} gadget candidati.")
+        print(f"[*] Ricerca completata. Trovati {len(self.gadgets)} gadget.")
         return self.gadgets
 
-    def print_gadgets(self, limit=5):
-        print(f"\n[*] Filtraggio completato. Visualizzo i migliori {limit}...")
+    def print_gadgets(self, limit=10):
+        print(f"\n[*] Calcolo Ranking e filtraggio...")
         
-        useful_gadgets = [g for g in self.gadgets if self.is_gadget_useful(g)]
-        useful_gadgets.sort(key=len)
+        # Creiamo una lista di tuple (score, gadget)
+        scored_list = []
+        for g in self.gadgets:
+            s = self.score_gadget(g)
+            if s > 50: # Mostriamo solo la "Serie A"
+                scored_list.append((s, g))
         
-        if not useful_gadgets:
-            print("[!] Nessun gadget utile trovato con i criteri attuali.")
-            return
-
-        for i, path in enumerate(useful_gadgets[:limit]):
-            print(f"\n{'='*60}")
-            print(f"GADGET #{i+1} (Lunghezza: {len(path)} blocchi)")
-            print(f"{'='*60}")
+        # Ordiniamo per score decrescente
+        scored_list.sort(key=lambda x: x[0], reverse=True)
+        
+        print(f"--- Top {limit} Gadgets by Quality Score ---")
+        
+        for i, (score, path) in enumerate(scored_list[:limit]):
+            print(f"\nRANK #{i+1} | SCORE: {score} | BLOCKS: {len(path)}")
+            print("-" * 40)
             
             for idx, block_addr in enumerate(path):
                 node = self.gm.addr_to_node[block_addr]
-                print(f"  [BLOCK {idx+1}] @ {hex(block_addr)}")
-                
                 for insn in node['insns']:
-                    prefix = "    "
-                    mnem = insn.mnemonic.lower()
-                    if mnem in ['ret', 'c.jr', 'jr', 'jalr']:
-                        prefix = "  🔴" 
-                    elif 'sp' in insn.op_str and ('ld' in mnem or 'lw' in mnem):
-                        prefix = "  🟢" 
-                    print(f"{prefix} {hex(insn.address)}:  {insn.mnemonic:<10} {insn.op_str}")
-
+                    indicator = "    "
+                    if 'ra' in insn.op_str and 'ld' in insn.mnemonic: indicator = "  🔗"
+                    if 'a0' in insn.op_str: indicator = "  🎯"
+                    if insn.mnemonic in ['ret', 'c.jr']: indicator = "  🔴"
+                    
+                    print(f"{indicator} {hex(insn.address)}: {insn.mnemonic:<10} {insn.op_str}")
+                
                 if idx < len(path) - 1:
-                    next_addr = path[idx+1]
-                    last_insn = node['insns'][-1]
-                    expected_next = last_insn.address + last_insn.size
-                    if next_addr == expected_next:
-                        print("      |\n      | (Fallthrough)\n      v")
-                    else:
-                        print(f"      |\n      | (SALTO a {hex(next_addr)})\n      v")
-                else:
-                    print("      |\n      +--> [FINE GADGET / RET]")
+                    print("      |")
