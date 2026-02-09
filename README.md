@@ -1,95 +1,108 @@
-# Titolo del Progetto: Analisi Automatizzata di Gadget ROP su Architettura RISC-V mediante Decomposizione LCSAJ e Ricerca Euristica (Rainbow BFS)
+# LCSAJdump for RISC-V architecture
 
 ---
 
-## 1. Introduzione e Definizione del Problema
+## 1. Introduzione
 
-L'architettura RISC-V sta guadagnando rapidamente popolarità in ambiti che spaziano dall'embedded al server-side. Con la diffusione dell'hardware, aumenta la necessità di analizzare la sicurezza dei binari compilati per questa architettura. Una delle tecniche di sfruttamento più comuni è la *Return Oriented Programming* (ROP), che consente l'esecuzione di codice arbitrario concatenando frammenti di codice esistente (gadget) terminanti con un'istruzione di ritorno.
+L'architettura RISC-V sta vivendo una rapida diffusione in ambiti critici, spaziando dai sistemi embedded ai server ad alte prestazioni. Parallelamente, la complessità degli exploit moderni richiede strumenti di analisi di sicurezza sempre più sofisticati. La tecnica ROP (*Return Oriented Programming*) rappresenta da sempre una delle minacce più pervasive, permettendo l'esecuzione di codice arbitrario concatenando frammenti di codice esistente ("gadget") che terminano con un'istruzione di ritorno, aggirando così le protezioni di memoria come NX (No-Execute).
 
-Gli strumenti di analisi esistenti (e.g., ROPGadget) utilizzano prevalentemente un approccio di scansione lineare (*linear sweeping*). Tale approccio, sebbene veloce, presenta limitazioni significative: non è in grado di modellare correttamente il flusso di controllo in presenza di salti condizionali o di sequenze di codice non contigue.
+Gli attuali strumenti di analisi statica (e.g., [Ropper](https://github.com/sashs/Ropper.git), [ROPGadget](https://github.com/JonathanSalwan/ROPgadget.git)) si basano prevalentemente sulla *scansione lineare* del segmento di codice eseguibile. Questo approccio, sebbene efficiente in termini di tempo computazionale, fallisce nell'identificare gadget complessi che includono salti condizionali o flussi di esecuzione non contigui.
 
-Il presente lavoro propone un nuovo strumento di analisi statica che supera tali limiti modellando il binario come un grafo di sequenze lineari e salti (LCSAJ), applicando un algoritmo di ricerca *Breadth-First Search* (BFS) modificato con euristiche di potatura (*pruning*) per identificare catene di gadget complesse ed efficaci.
+Questo lavoro propone un nuovo approccio basato sulla decomposizione del binario in blocchi **LCSAJ** (*Linear Code Sequence and Jump*). Tale metodo permette di modellare il programma come un grafo diretto e di applicare algoritmi di ricerca avanzati per identificare catene di esecuzione "nascoste", altrimenti invisibili agli scanner tradizionali.
 
 ## 2. Metodologia
 
 ### 2.1 Decomposizione LCSAJ
+Per superare i limiti della scansione lineare, il codice disassemblato viene segmentato in blocchi atomici denominati LCSAJ.
+Un blocco LCSAJ è definito come una sequenza di istruzioni che viene eseguita linearmente e termina incondizionatamente (es. salto diretto, ritorno) o potenzialmente (es. salto condizionato, chiamata a funzione).
 
-Al fine di superare i limiti della scansione lineare, il binario viene decomposto in blocchi **LCSAJ** (*Linear Code Sequence and Jump*). Un blocco LCSAJ è definito come una sequenza di istruzioni consecutive che termina incondizionatamente con un salto o che può essere interrotta da un flusso di controllo divergente.
-
-Formalmente, dato un insieme di istruzioni , un blocco  è una sottosequenza  tale che:
-
-* Per ogni , l'esecuzione prosegue sequenzialmente da  a .
-* L'istruzione  è un'istruzione di salto (condizionato o incondizionato), una chiamata a funzione, o un ritorno (`RET`).
-
-Questa decomposizione permette di isolare le "strutture atomiche" del flusso di esecuzione, includendo anche i percorsi di *fallthrough* (mancato salto) spesso ignorati dagli scanner classici.
+Questa decomposizione permette di catturare due flussi distinti per ogni blocco:
+1.  Il ramo di salto (*taken branch*).
+2.  Il ramo di continuazione sequenziale (*fallthrough*).
+Ciò crea una mappa completa dei flussi di controllo possibili, inclusi quelli che attraversano "bivi" condizionali.
 
 ### 2.2 Costruzione del Grafo e Mappatura Intra-Block
+Il binario viene modellato come un grafo diretto $G = (V, E)$, dove:
+* $V$ è l'insieme dei nodi, corrispondenti ai blocchi LCSAJ identificati.
+* $E$ è l'insieme degli archi, che rappresentano i trasferimenti di controllo tra blocchi.
 
-Il programma viene modellato come un grafo diretto , dove  rappresenta l'insieme dei blocchi LCSAJ.
-Una criticità riscontrata nell'analisi dei binari RISC-V (specialmente con estensione *Compressed*) è che un salto può avere come destinazione un indirizzo interno a un blocco esistente, non necessariamente il suo inizio.
+Una criticità specifica dell'architettura RISC-V (in particolare con l'estensione *Compressed* a 16-bit) è la possibilità che un'istruzione di salto abbia come destinazione un indirizzo intermedio all'interno di un blocco esistente, e non necessariamente il suo inizio (Leader). I metodi tradizionali che mappano solo i Leader perdono queste connessioni.
 
-Per risolvere questo problema, è stata implementata una strategia di **Intra-Block Mapping**. Definiamo una funzione di mappatura  che associa ogni indirizzo di memoria al blocco  che lo contiene.
-Un arco diretto  esiste se:
+Per risolvere questo problema, è stata implementata una strategia di **Intra-Block Mapping**: una funzione di mappatura $M(addr) \rightarrow B_k$ associa ogni singolo indirizzo di istruzione al blocco $B_k$ che la contiene. Questo permette la creazione di archi nel grafo anche verso destinazioni non allineate all'inizio del blocco, aumentando drasticamente la densità delle connessioni.
 
-1. L'ultima istruzione di  è un salto verso un indirizzo  e .
-2. L'ultima istruzione di  non è un salto incondizionato e l'indirizzo successivo sequenziale appartiene a  (*fallthrough*).
+### 2.3 Algoritmo di Ricerca "Rainbow BFS"
+L'esplorazione del grafo avviene tramite un algoritmo *Breadth-First Search* (BFS) a ritroso (*backward slicing*), partendo dalle istruzioni di ritorno (Sink).
+Per gestire l'esplosione combinatoria dei percorsi in binari complessi (come `libc`), l'algoritmo implementa due euristiche fondamentali:
 
-### 2.3 Algoritmo "Rainbow BFS"
+1.  **Stateful Path Exploration (Sfumatura):** Ogni percorso mantiene una memoria locale dei nodi visitati. Questo permette di evitare cicli banali all'interno dello stesso gadget, ma consente di riattraversare nodi comuni se si proviene da percorsi diversi, garantendo la scoperta di varianti dello stesso gadget.
+2.  **Frequency-Based Pruning (Scurimento):** Viene definito un contatore di saturazione globale $\phi(v)$ per ogni nodo $v$. Se un nodo viene visitato troppe volte da percorsi diversi, viene considerato un "hub" saturo e i successivi percorsi che lo attraversano vengono tagliati. È proprio questa progressiva saturazione verso il nero a dare il nome 'rainbow' a questa variante dell'algoritmo.
+   
+La condizione di arresto (pruning) per un dato percorso $p$ è definita formalmente come:
 
-La ricerca dei gadget avviene mediante un algoritmo BFS a ritroso (*backward*), partendo dai nodi "sink" (blocchi terminanti con `RET` o `JALR`). L'algoritmo, denominato **Rainbow BFS**, introduce due concetti chiave per gestire l'esplosione combinatoria tipica dei grafi di controllo complessi:
-
-1. **Stateful Path Exploration (Sfumatura):** A differenza di una BFS standard che marca i nodi come "visitati" globalmente, l'algoritmo mantiene lo stato di visita locale per ogni percorso. Ciò permette di scoprire molteplici gadget che condividono nodi intermedi ma divergono nel flusso logico.
-2. **Frequency-Based Pruning (Scurimento):** Per evitare loop infiniti o un consumo eccessivo di memoria su nodi ad alta connettività (hub), viene mantenuto un contatore globale di frequenza  per ogni nodo .
-
-La condizione di arresto per un ramo di ricerca è definita come:
-
-
-
-Dove  e  sono soglie configurabili.
-
-## 3. Modello Matematico di Scoring
-
-Dato l'elevato numero di gadget identificati, è necessario un sistema di ranking per filtrare i risultati semanticamente rilevanti per un attaccante. Ogni gadget  (inteso come percorso nel grafo) riceve un punteggio  calcolato come segue:
+$$\phi(v) >= \tau_{darkness} $$
 
 Dove:
+* $\phi(v)$ è il numero di volte che il nodo $v$ è stato visitato globalmente.
+* $\tau_{darkness}$ è una soglia configurabile.
 
-* : Punteggio iniziale ideale.
-* : Penalità basata sul numero di blocchi LCSAJ attraversati (la complessità riduce l'affidabilità).
-* : Penalità per il numero totale di istruzioni (riduzione degli effetti collaterali).
-* : Bonus semantico basato sull'analisi dei registri coinvolti.
+---
 
-Il termine  è definito come:
-$$ B_{sem}(g) = \begin{cases}
-+50 & \text{se } g \text{ controlla } RA \text{ (Return Address)} \
-+40 & \text{se } g \text{ controlla } A0 \dots A7 \text{ (Argument Registers)} \
--30 & \text{se } g \text{ modifica } GP \text{ o } TP \text{ (Registri Critici)}
-\end{cases} $$
+## 3. Modello Matematico di Scoring (Ranking dei Gadget)
 
-Questo modello privilegia gadget brevi, puliti e funzionali al concatenamento (ROP Chaining) e all'invocazione di funzioni di sistema.
+Dato l'elevato numero di gadget candidati (ordine di $10^3$ - $10^4$), è necessario un sistema di ranking per presentare all'analista i risultati semanticamente più rilevanti.
+Ogni gadget $g$ riceve un punteggio di qualità $S(g)$ calcolato secondo la seguente funzione lineare:
 
-## 4. Implementazione
+$$S(g) = S_{base} - P_{len}(g) - P_{ins}(g) + B_{sem}(g)$$
 
-Il prototipo è stato sviluppato in Python sfruttando le seguenti librerie:
+### Definizione dei termini:
 
-* **Capstone Engine:** Per il disassemblaggio, configurato con `CS_MODE_RISCV64` e `CS_MODE_RISCVC` per il supporto corretto alle istruzioni compresse a 16-bit.
-* **NetworkX:** Per la gestione della struttura dati del grafo.
-* **PyElftools:** Per il parsing del formato binario ELF.
+1.  **Base Score ($S_{base}$):**
+    $$S_{base} = 100$$
+    Rappresenta il punteggio massimo ideale per un gadget privo di difetti.
 
-## 5. Risultati Sperimentali
+2.  **Penalità di Lunghezza ($P_{len}$):**
+    $$P_{len}(g) = 10 \cdot |B_g|$$
+    Dove $|B_g|$ è il numero di blocchi LCSAJ che compongono il gadget. Gadget multi-blocco sono intrinsecamente più instabili e ricevono una penalità maggiore.
 
-Il sistema è stato validato analizzando la libreria standard C (`libc.so.6`) per architettura RISC-V 64-bit.
+3.  **Penalità di Istruzioni ($P_{ins}$):**
+    $$P_{ins}(g) = 2 \cdot N_{ins}$$
+    Dove $N_{ins}$ è il numero totale di istruzioni nel gadget. Gadget lunghi introducono "rumore" (effetti collaterali sui registri) e vengono penalizzati.
 
-**Metriche di Analisi:**
+4.  **Bonus Semantico ($B_{sem}$):**
+    Analizza le istruzioni per identificare comportamenti utili all'exploit. È definito come la somma di tre componenti:
+    $$B_{sem}(g) = \delta_{RA} + \delta_{ARG} - \delta_{CRIT}$$
 
-* **Dimensione Input:** ~291.000 istruzioni disassemblate.
-* **Tempo di Esecuzione:** 5.3 secondi (su macchina standard).
+    * $\delta_{RA} = +50$: Assegnato se il gadget carica il *Return Address* (`ra`) dallo stack (essenziale per il chaining dei gadget).
+    * $\delta_{ARG} = +40$: Assegnato se il gadget carica i registri argomento (`a0`-`a7`) dallo stack (essenziale per preparare chiamate a funzione).
+    * $\delta_{CRIT} = 30$: Penalità applicata se il gadget modifica registri critici come `gp` (Global Pointer) o `tp` (Thread Pointer), rischiando il crash del processo.
+
+---
+
+## 4. Considerazioni
+
+Il punteggio di 160 rappresenta il massimo locale pratico per architetture reali RISC-V. Esso corrisponde a un gadget di tipo Fallthrough (2 blocchi) altamente efficiente (5 istruzioni) che offre il controllo completo del flusso (`ra` + `a0`). La consistenza di questo valore tra i primi 10 risultati conferma che l'algoritmo di ranking sta correttamente identificando e raggruppando la classe di gadget funzionalmente ottimali disponibili nel binario target.
+
+---
+
+## 5. Analisi dei Risultati Sperimentali
+
+Il sistema è stato validato analizzando la libreria standard C (`libc.so.6`, architettura RISC-V 64-bit), un binario di dimensioni significative e alta complessità.
+
+**Metriche Ottenute:**
+* **Spazio di Ricerca:** ~291.000 istruzioni disassemblate.
+* **Tempo di Analisi:** 5.3 secondi (su hardware commodity).
 * **Copertura:** 66.492 nodi LCSAJ generati.
-* **Gadget Identificati:** 8.867 gadget totali.
-* **Pruning:** Con profondità 20 e soglia di saturazione 2, sono stati potati 8 rami ridondanti.
+* **Gadget Identificati:** 8.867 totali (rispetto ai ~1.400 identificabili senza la mappatura Intra-Block).
 
-**Analisi Qualitativa:**
-I gadget con il punteggio più alto () mostrano sequenze ottimali per il caricamento diretto dei registri  e  dallo stack. Inoltre, l'analisi semantica ha permesso di isolare gadget complessi di **Stack Pivoting** (e.g., `add sp, s0, t0`), essenziali per bypassare le protezioni di memoria moderne, che sarebbero sfuggiti a un'analisi tradizionale.
+**Validazione dell'Euristica:**
+I gadget classificati nei primi 10 posti (Score $\approx 160$) mostrano invariabilmente la struttura:
+`Check Condizionale` $\rightarrow$ `Caricamento A0` $\rightarrow$ `Caricamento RA` $\rightarrow$ `RET`.
+
+Questa struttura conferma la capacità del tool di identificare sequenze ottimali per la costruzione di catene ROP, filtrando efficacemente le migliaia di sequenze irrilevanti.
+Inoltre, l'algoritmo ha isolato con successo gadget di **Stack Pivoting** complessi (es. `add sp, s0, t0`), dimostrando una copertura semantica superiore agli scanner tradizionali che faticano a tracciare manipolazioni aritmetiche dello Stack Pointer attraverso blocchi multipli.
+
+---
 
 ## 6. Conclusioni
 
-Il lavoro dimostra che l'approccio basato su grafi LCSAJ, combinato con una mappatura precisa delle istruzioni intra-blocco e un algoritmo di ricerca euristica, supera significativamente le tecniche di scansione lineare. Lo strumento sviluppato è in grado di identificare un numero maggiore di gadget funzionali in tempi compatibili con l'utilizzo reale, fornendo una base solida per l'automazione della costruzione di exploit su architettura RISC-V.
+Il lavoro dimostra che l'approccio basato su grafi LCSAJ, potenziato da una mappatura precisa delle istruzioni intra-blocco e da un algoritmo di ricerca euristica (Rainbow BFS), supera significativamente le tecniche di scansione lineare. Lo strumento sviluppato è in grado di identificare un numero maggiore di gadget funzionali e semanticamente ricchi in tempi compatibili con l'utilizzo reale, fornendo una base solida per l'automazione della costruzione di exploit su architettura RISC-V.
