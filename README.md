@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="_images/LOGO.svg" width="30%" style="position: relative; top: 0; right: 0;" alt="Project Logo"/>
+<img src="_images/LOGO.svg" width="60%" style="position: relative; top: 0; right: 0;" alt="Project Logo"/>
 
 # LCSAJdump
 
