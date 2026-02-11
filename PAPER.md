@@ -53,4 +53,4 @@ $$S_{gadget} = \sum (w_{reg} \cdot \mathbb{I}_{reg} + w_{len} \cdot L^{-1} + w_{
 Control of the Program Counter ($RA$) and the first function argument ($A0$) are assigned maximum weights (+50, +40), while chain length ($L$) introduces a penalty.
 
 **Final Outcome:**
-The current v4 implementation is capable of analyzing the entire `libc` (~300,000 instructions) in approximately **5.3 seconds**, identifying critical gadgets such as indirect *Stack Pivots*. The architecture also supports asynchronous monitoring of I/O-bound (loading) and CPU-bound (graph construction) phases, ensuring optimal responsiveness.
+The current v4 implementation is capable of analyzing the entire `libc` (~300,000 instructions) in approximately **5.8 seconds**, identifying critical gadgets such as indirect *Stack Pivots*. The architecture also supports asynchronous monitoring of I/O-bound (loading) and CPU-bound (graph construction) phases, ensuring optimal responsiveness.
