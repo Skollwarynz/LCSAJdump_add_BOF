@@ -1,8 +1,8 @@
 import click
 import sys
-from core.loader import BinaryLoader
-from core.graph import LCSAJGraph
-from core.rainbowBFS import RainbowFinder
+from .core.loader import BinaryLoader
+from .core.graph import LCSAJGraph
+from .core.rainbowBFS import RainbowFinder
 
 @click.command()
 @click.argument('binary_path', type=click.Path(exists=True))

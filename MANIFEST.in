@@ -1,0 +1,21 @@
+include README.md
+include LICENSE
+include requirements.txt
+
+graft lcsajdump
+
+prune testCTFs
+prune unitTest
+prune _images
+
+prune build
+prune lcsajdump.egg-info
+
+prune lcsajdump/venv
+
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude gadgets_found.txt  
+global-exclude PAPER.md           
