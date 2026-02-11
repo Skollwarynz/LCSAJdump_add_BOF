@@ -36,8 +36,8 @@ LCSAJdump is a static analysis framework designed to discover Return-Oriented Pr
 Traditional ROP scanners typically employ a linear, sliding-window approach over raw executable bytes. While effective for standard instruction sequences, this method fails to identify **Shadow Gadgets**—executable chains that span non-contiguous memory blocks connected by unconditional jumps or conditional branches.
 
 LCSAJdump overcomes this limitation by reconstructing the Control-Flow Graph (CFG) through **Linear Code Sequence and Jump (LCSAJ)** analysis. By modeling the binary as a directed graph of basic blocks, the tool identifies:
-1.  **Contiguous Gadgets:** Standard linear sequences terminating in a control-flow transfer.
-2.  **Non-Contiguous (Shadow) Gadgets:** Complex chains traversing multiple basic blocks, effectively bypassing "bad bytes" (e.g., null bytes) and utilizing instructions that would otherwise be unreachable by linear scanning.
+1. **Contiguous Gadgets:** Standard linear sequences terminating in a control-flow transfer.
+2. **Non-Contiguous (Shadow) Gadgets:** Complex chains traversing multiple basic blocks, effectively bypassing "bad bytes" (e.g., null bytes) and utilizing instructions that would otherwise be unreachable by linear scanning.
 
 ## Features
 
