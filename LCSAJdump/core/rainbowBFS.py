@@ -99,20 +99,17 @@ class RainbowFinder:
             
             for i, (s, p, tag) in enumerate(gadgets[:limit]):
                 if verbose:
-                    # Formato dettagliato con blocchi e icone
                     print(f"\nRANK #{i+1} | SCORE: {s} | TYPE: {tag}")
                     for addr in p:
                         node = self.gm.addr_to_node[addr]
                         for insn in node['insns']:
                              print(f"  {hex(insn.address)}: {insn.mnemonic} {insn.op_str}")
                 else:
-                    # Formato sintetico stile ROPgadget
                     full_gadget_str = []
                     for addr in p:
                         node = self.gm.addr_to_node[addr]
                         for insn in node['insns']:
                             full_gadget_str.append(f"{insn.mnemonic} {insn.op_str}")
                     
-                    # Unisce le istruzioni con "; " e stampa con l'indirizzo di partenza
                     start_addr = hex(p[0])
                     print(f"{start_addr}: {'; '.join(full_gadget_str)}")

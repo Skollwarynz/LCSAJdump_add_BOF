@@ -30,14 +30,14 @@ def main(binary_path, depth, darkness, limit, min_score, verbose):
     # Output a video filtrato
     finder.print_gadgets(limit=limit, min_score=min_score, verbose=verbose)
     
-    # Output su file (TUTTO, senza limiti di visualizzazione ma ordinato)
+    # Output su file 
     output_file = "gadgets_found.txt"
     try:
         with open(output_file, "w") as f:
             sys.stdout = f
             print(f"REPORT GADGET - Depth:{depth} Darkness:{darkness}\n")
             finder.print_gadgets(limit=len(gadgets), min_score=min_score)
-            sys.stdout = sys.__stdout__ # Ripristina stdout
+            sys.stdout = sys.__stdout__ 
         print(f"\n[+] Report salvato in: {output_file} (Trovati {len(gadgets)} gadget)")
     except Exception as e:
         sys.stdout = sys.__stdout__
