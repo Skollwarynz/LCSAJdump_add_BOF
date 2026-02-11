@@ -1,5 +1,7 @@
 # LCSAJdump for RISC-V architecture
 
+---
+
 ## 1. Compile
 
 ### 1.1 Download repo
@@ -24,6 +26,8 @@
 ❯ pip install -r requirements.txt
 ```
 
+---
+
 ## 2. Usage
 
 ```zsh
@@ -41,6 +45,8 @@ Options:
   --help                   Show this message and exit.
 ```
 
+---
+
 ## About
 
-[BEST THEORETICALLY EXPLAINED PAPER](https://github.com/chris1sflaggin/LCSAJdump/PAPER.md)
+[BEST THEORETICALLY EXPLAINED PAPER](https://github.com/Chris1sFlaggin/LCSAJdump/blob/main/PAPER.md)
