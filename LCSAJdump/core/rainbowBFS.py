@@ -1,12 +1,12 @@
 import collections
 
 class RainbowFinder:
-    # Aggiungiamo i parametri al costruttore con dei default
+    jump_mnemonics = ['j', 'c.j', 'jal', 'c.jal']
+
     def __init__(self, graph_manager, max_depth, max_darkness):
         self.gm = graph_manager
         self.gadgets = []
         
-        # Ora usiamo i valori passati da fuori
         self.MAX_DEPTH = max_depth
         self.MAX_DARKNESS = max_darkness
 
@@ -17,14 +17,18 @@ class RainbowFinder:
             if addr in self.gm.addr_to_node:
                 full_insns.extend(self.gm.addr_to_node[addr]['insns'])
         
-        score -= (len(path) * 10) + (len(full_insns) * 2)
+        # v4 fix: togliere anche (len(path) * 10) era troppo penalizzante per gadget LCSAJ
+        score -= (len(full_insns) * 2)
         
         has_ra = any('ra' in i.op_str and 'ld' in i.mnemonic for i in full_insns)
         has_a0 = any('a0' in i.op_str and 'ld' in i.mnemonic for i in full_insns)
-        
+        # v4 fix: premiare i salti trampolino
+        has_J = any(i.mnemonic in self.jump_mnemonics for i in full_insns)
+
         if has_ra: score += 50
         if has_a0: score += 40
-        
+        if has_J: score += 30
+
         # Penalità JOP (Salti a registro non-ra)
         if full_insns:
             last = full_insns[-1]
@@ -43,7 +47,8 @@ class RainbowFinder:
         while queue:
             path, visited = queue.popleft()
             head = path[0]
-            if len(path) > 1: self.gadgets.append(path)
+            # V4 fix: '>' was blocking sequential gadgets
+            if len(path) >= 1: self.gadgets.append(path)
             if len(path) >= self.MAX_DEPTH: continue
 
             for parent in self.gm.reverse_graph.get(head, []):
@@ -54,23 +59,60 @@ class RainbowFinder:
                 node_darkness[parent] += 1
                 queue.append(([parent] + path, visited | {parent}))
         
-        print(f"[*] Pruning effettuato: {pruned} rami tagliati 🌈")
+        print(f"[*] Pruning effettuato: {pruned} rami tagliati")
         return self.gadgets
 
-    def print_gadgets(self, limit, min_score):
-        # Aggiungiamo il filtro min_score qui
-        scored = []
+    def _classify_gadget(self, path):
+        """Ritorna una etichetta e una categoria per il gadget"""
+        if len(path) == 1:
+            return "LINEAR", "Sequential"
+        
+        # Analizziamo il tipo di salto
+        first_node = self.gm.addr_to_node[path[0]]
+        last_insn = first_node['last_insn']
+        mnem = last_insn.mnemonic.lower()
+        
+        if mnem in ['j', 'c.j', 'jal', 'c.jal']:
+            return "TRAMPOLINE", "Jump-Based" # Salta sopra ostacoli
+        elif mnem.startswith('b') or mnem.startswith('c.b'):
+            return "CONDITIONAL", "Jump-Based" # Logica if/else
+        else:
+            return "FALLTHROUGH", "Jump-Based" # Discontinuità di memoria
+
+    def print_gadgets(self, limit, min_score, verbose=False):
+        categories = {'Sequential': [], 'Jump-Based': []}
+
         for g in self.gadgets:
             s = self.score_gadget(g)
-            if s >= min_score:
-                scored.append((s, g))
-        
-        scored.sort(key=lambda x: x[0], reverse=True)
-        
-        print(f"\n--- Visualizzazione Top {limit} (Min Score: {min_score}) ---")
-        for i, (s, p) in enumerate(scored[:limit]):
-            print(f"\nRANK #{i+1} | SCORE: {s}")
-            for addr in p:
-                node = self.gm.addr_to_node[addr]
-                for insn in node['insns']:
-                     print(f"  {hex(insn.address)}: {insn.mnemonic} {insn.op_str}")
+            if s < min_score: continue
+            
+            tag, cat = self._classify_gadget(g)
+            categories[cat].append((s, g, tag)) 
+
+        for cat_name in ['Sequential', 'Jump-Based']:
+            gadgets = categories[cat_name]
+            gadgets.sort(key=lambda x: x[0], reverse=True)
+            
+            print(f"\n{'='*60}")
+            print(f"--- TOP {limit} {cat_name.upper()} GADGETS ---")
+            print(f"{'='*60}")
+            
+            for i, (s, p, tag) in enumerate(gadgets[:limit]):
+                if verbose:
+                    # Formato dettagliato con blocchi e icone
+                    print(f"\nRANK #{i+1} | SCORE: {s} | TYPE: {tag}")
+                    for addr in p:
+                        node = self.gm.addr_to_node[addr]
+                        for insn in node['insns']:
+                             print(f"  {hex(insn.address)}: {insn.mnemonic} {insn.op_str}")
+                else:
+                    # Formato sintetico stile ROPgadget
+                    full_gadget_str = []
+                    for addr in p:
+                        node = self.gm.addr_to_node[addr]
+                        for insn in node['insns']:
+                            full_gadget_str.append(f"{insn.mnemonic} {insn.op_str}")
+                    
+                    # Unisce le istruzioni con "; " e stampa con l'indirizzo di partenza
+                    start_addr = hex(p[0])
+                    print(f"{start_addr}: {'; '.join(full_gadget_str)}")

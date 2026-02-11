@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /home/chris/Desktop/tesi/LCSAJdump/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/chris/Desktop/tesi
+collecting ... collected 16 items
+
+unitTest/binaryTest.py::test_real_binary_gadget_discovery PASSED         [  6%]
+unitTest/bytesTest.py::test_decode_exploit_gadget PASSED                 [ 12%]
+unitTest/bytesTest.py::test_find_exploit_gadget_logic PASSED             [ 18%]
+unitTest/stressTest.py::test_loader_no_text_section PASSED               [ 25%]
+unitTest/stressTest.py::test_loader_file_not_found PASSED                [ 31%]
+unitTest/stressTest.py::test_graph_branch_logic PASSED                   [ 37%]
+unitTest/stressTest.py::test_graph_infinite_loop PASSED                  [ 43%]
+unitTest/stressTest.py::test_graph_jump_outside PASSED                   [ 50%]
+unitTest/stressTest.py::test_stress_large_binary_chain PASSED            [ 56%]
+unitTest/stressTest.py::test_rainbow_cycle_handling PASSED               [ 62%]
+unitTest/stressTest.py::test_rainbow_pruning_darkness PASSED             [ 68%]
+unitTest/stressTest.py::test_scoring_priorities PASSED                   [ 75%]
+unitTest/test.py::test_loader_disassemble_mock PASSED                    [ 81%]
+unitTest/test.py::test_graph_node_creation PASSED                        [ 87%]
+unitTest/test.py::test_graph_edges_fallthrough PASSED                    [ 93%]
+unitTest/test.py::test_rainbow_search_depth PASSED                       [100%]
+
+============================== 16 passed in 1.64s ==============================

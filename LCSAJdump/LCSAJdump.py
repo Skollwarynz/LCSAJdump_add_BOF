@@ -10,7 +10,8 @@ from core.rainbowBFS import RainbowFinder
 @click.option('--darkness', '-k', default=50, help='Soglia di pruning (Max visite per nodo).')
 @click.option('--limit', '-l', default=10, help='Numero di gadget da mostrare a video.')
 @click.option('--min-score', '-s', default=0, help='Punteggio minimo per mostrare un gadget.')
-def main(binary_path, depth, darkness, limit, min_score):
+@click.option('--verbose', '-v', is_flag=True, help='Mostra dettagli extra sui gadget trovati.')
+def main(binary_path, depth, darkness, limit, min_score, verbose):
     """
     RISC-V LCSAJ ROP Finder.
     Analizza un binario per trovare gadget ROP usando l'algoritmo Rainbow BFS.
@@ -27,7 +28,7 @@ def main(binary_path, depth, darkness, limit, min_score):
     gadgets = finder.search()
     
     # Output a video filtrato
-    finder.print_gadgets(limit=limit, min_score=min_score)
+    finder.print_gadgets(limit=limit, min_score=min_score, verbose=verbose)
     
     # Output su file (TUTTO, senza limiti di visualizzazione ma ordinato)
     output_file = "gadgets_found.txt"
