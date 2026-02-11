@@ -7,7 +7,7 @@ from core.rainbowBFS import RainbowFinder
 @click.command()
 @click.argument('binary_path', type=click.Path(exists=True))
 @click.option('--depth', '-d', default=12, help='Profondità massima di ricerca (blocchi LCSAJ).')
-@click.option('--darkness', '-k', default=50, help='Soglia di pruning (Max visite per nodo).')
+@click.option('--darkness', '-k', default=30, help='Soglia di pruning (Max visite per nodo).')
 @click.option('--limit', '-l', default=10, help='Numero di gadget da mostrare a video.')
 @click.option('--min-score', '-s', default=0, help='Punteggio minimo per mostrare un gadget.')
 @click.option('--verbose', '-v', is_flag=True, help='Mostra dettagli extra sui gadget trovati.')

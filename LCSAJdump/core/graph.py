@@ -1,4 +1,5 @@
 import networkx as nx
+from .loader import draw_progress
 
 class LCSAJGraph:
     def __init__(self, instructions):
@@ -6,7 +7,7 @@ class LCSAJGraph:
         self.graph = nx.DiGraph()
         self.addr_to_node = {} # Inizio blocco -> Dati blocco
         self.insn_to_block_start = {} # Indirizzo istruzione -> Inizio blocco di appartenenza
-        self.reverse_graph = {}
+        self.reverse_graph = {} 
         self.nodes = []
 
     def build(self):
@@ -15,25 +16,35 @@ class LCSAJGraph:
 
     def _create_nodes(self):
         if not self.instructions: return
-        current_block = []
+
+        print("[*] Costruzione Nodi LCSAJ...") 
+        
+        total_insns = len(self.instructions)
+        current_block_insns = []
         block_start = self.instructions[0].address 
 
-        for insn in self.instructions:
-            current_block.append(insn)
+        for idx, insn in enumerate(self.instructions):
+            
+            if idx % 1000 == 0:
+                draw_progress(idx, total_insns, "Building Graph")
+
+            current_block_insns.append(insn)
             mnem = insn.mnemonic.lower()
             
-            # Taglio LCSAJ
             is_jump = mnem in ['ret', 'c.jr', 'c.jalr', 'jr', 'jalr'] or \
                       mnem in ['j', 'jal', 'c.j', 'c.jal'] or \
                       mnem.startswith('b') or mnem.startswith('c.b')
 
             if is_jump:
-                self._add_node(block_start, current_block)
-                current_block = []
-                block_start = insn.address + insn.size
+                self._add_node(block_start, current_block_insns)
+                current_block_insns = []
+                if idx + 1 < total_insns:
+                    block_start = self.instructions[idx+1].address 
 
-        if current_block:
-            self._add_node(block_start, current_block)
+        if current_block_insns:
+            self._add_node(block_start, current_block_insns)
+            
+        draw_progress(total_insns, total_insns, "Building Graph")
 
     def _add_node(self, start, insns):
         node = {'start': start, 'end': insns[-1].address, 'insns': insns, 'last_insn': insns[-1]}
@@ -48,16 +59,13 @@ class LCSAJGraph:
             mnem = last.mnemonic.lower()
             targets = []
 
-            # 1. Fallthrough
             if mnem not in ['j', 'jal', 'c.j', 'c.jal', 'ret', 'jr', 'c.jr']:
                 next_addr = last.address + last.size
                 if next_addr in self.insn_to_block_start:
                     targets.append(self.insn_to_block_start[next_addr])
 
-            # 2. Salti Diretti (Parsing robusto)
             if mnem.startswith('b') or mnem in ['jal', 'j', 'c.j', 'c.jal']:
                 try:
-                    # Estraiamo l'ultimo valore hex dall'op_str
                     import re
                     hex_match = re.findall(r'0x[0-9a-fA-F]+', last.op_str)
                     if hex_match:

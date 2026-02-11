@@ -38,7 +38,7 @@ class RainbowFinder:
         return score
 
     def search(self):
-        print(f"[*] Configurazione Rainbow: Depth={self.MAX_DEPTH}, Darkness={self.MAX_DARKNESS}")
+        print(f"\n[*] Configurazione Rainbow: Depth={self.MAX_DEPTH}, Darkness={self.MAX_DARKNESS}")
         tails = self.gm.get_gadget_tails()
         queue = collections.deque([([t['start']], {t['start']}) for t in tails])
         node_darkness = collections.defaultdict(int)
@@ -59,7 +59,7 @@ class RainbowFinder:
                 node_darkness[parent] += 1
                 queue.append(([parent] + path, visited | {parent}))
         
-        print(f"[*] Pruning effettuato: {pruned} rami tagliati")
+        print(f"[*] Pruning effettuato: {pruned} rami tagliati.")
         return self.gadgets
 
     def _classify_gadget(self, path):
@@ -93,9 +93,9 @@ class RainbowFinder:
             gadgets = categories[cat_name]
             gadgets.sort(key=lambda x: x[0], reverse=True)
             
-            print(f"\n{'='*60}")
-            print(f"--- TOP {limit} {cat_name.upper()} GADGETS ---")
-            print(f"{'='*60}")
+            print(f"\033[33m\n{'='*60}\033[0m")
+            print(f"\033[33m--- TOP {limit} {cat_name.upper()} GADGETS ---\033[0m")
+            print(f"\033[33m{'='*60}\033[0m")
             
             for i, (s, p, tag) in enumerate(gadgets[:limit]):
                 if verbose:
@@ -103,7 +103,7 @@ class RainbowFinder:
                     for addr in p:
                         node = self.gm.addr_to_node[addr]
                         for insn in node['insns']:
-                             print(f"  {hex(insn.address)}: {insn.mnemonic} {insn.op_str}")
+                             print(f"  \033[33m{hex(insn.address)}\033[0m: {insn.mnemonic} {insn.op_str}")
                 else:
                     full_gadget_str = []
                     for addr in p:
@@ -112,4 +112,4 @@ class RainbowFinder:
                             full_gadget_str.append(f"{insn.mnemonic} {insn.op_str}")
                     
                     start_addr = hex(p[0])
-                    print(f"{start_addr}: {'; '.join(full_gadget_str)}")
+                    print(f"\033[33m{start_addr}\033[0m: {'; '.join(full_gadget_str)}")
