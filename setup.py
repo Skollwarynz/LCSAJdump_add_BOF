@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="lcsajdump",
-    version="1.0.5", 
+    version="1.0.6", 
     author="Chris1sFlaggin",
     author_email="lcsajdump@chris1sflaggin.it",
     description="A Graph-Based ROP Gadget Finder for RISC-V architectures",

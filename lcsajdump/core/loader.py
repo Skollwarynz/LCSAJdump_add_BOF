@@ -63,7 +63,7 @@ class BinaryLoader:
         if self.code_bytes is None:
             self.load()
             
-        print("[*] Avvio disassemblaggio con Capstone (Modalità Turbo)...")
+        print("[*] Avvio disassemblaggio con Capstone...")
         
         instructions = []
         total_bytes = len(self.code_bytes)
