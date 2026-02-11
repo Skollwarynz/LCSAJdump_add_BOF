@@ -9,7 +9,6 @@
 <em>LCSAJDump: A Graph-Based Framework for Automated Gadget Discovery in RISC-V Environments.</em>
 
 <img src="https://img.shields.io/badge/status-Thesis_Prototype-orange?style=for-the-badge" alt="Status">
-<img src="https://img.shields.io/github/license/chris1sflaggin/wwyl?style=flat-square&logo=opensourceinitiative&logoColor=white&color=FF4B4B" alt="license">
 
 ---
 
