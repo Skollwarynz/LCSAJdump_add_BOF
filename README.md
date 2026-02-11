@@ -42,6 +42,7 @@ Options:
   -k, --darkness INTEGER   Soglia di pruning (Max visite per nodo).
   -l, --limit INTEGER      Numero di gadget da mostrare a video.
   -s, --min-score INTEGER  Punteggio minimo per mostrare un gadget.
+  -v, --verbose            Stampe dettagliate.
   --help                   Show this message and exit.
 ```
 
