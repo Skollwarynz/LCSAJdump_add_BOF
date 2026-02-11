@@ -82,6 +82,8 @@ All of them listed in `requirements.txt`:
 
 ### Installation
 
+#### GitHub
+
 Clone the repository and install the required dependencies:
 
 ```bash
@@ -89,6 +91,12 @@ git clone [https://github.com/Chris1sFlaggin/LCSAJdump.git](https://github.com/C
 cd LCSAJdump
 pip install -r requirements.txt
 
+```
+
+#### Pip
+
+```zsh
+pip install lcsajdump
 ```
 
 ### Usage

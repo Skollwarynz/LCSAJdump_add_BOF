@@ -7,7 +7,7 @@ setup(
     name="lcsajdump",
     version="1.0.4", 
     author="Chris1sFlaggin",
-    author_email="tuo.email@example.com",
+    author_email="lcsajdump@chris1sflaggin.it",
     description="A Graph-Based ROP Gadget Finder for RISC-V architectures",
     long_description=long_description,
     long_description_content_type="text/markdown",
