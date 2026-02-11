@@ -63,19 +63,34 @@ class BinaryLoader:
         if self.code_bytes is None:
             self.load()
             
-        print("[*] Avvio disassemblaggio con Capstone...")
+        print("[*] Avvio disassemblaggio con Capstone (Modalità Resiliente)...")
         
         instructions = []
-        disasm_iter = self.md.disasm(self.code_bytes, self.base_addr)
-        
         total_bytes = len(self.code_bytes)
+        ptr = 0
         
-        for insn in disasm_iter:
-            instructions.append(insn)
+        while ptr < total_bytes:
+            curr_addr = self.base_addr + ptr
             
+            try:
+                code_chunk = self.code_bytes[ptr:]
+                
+                gen = self.md.disasm(code_chunk, curr_addr, count=1)
+                insn = next(gen, None)
+                
+                if insn:
+                    instructions.append(insn)
+                    ptr += insn.size 
+                else:
+                    ptr += 2
+                    
+            except StopIteration:
+                ptr += 2
+            except Exception:
+                ptr += 2
+
             if len(instructions) % 1000 == 0:
-                curr_offset = insn.address - self.base_addr
-                draw_progress(curr_offset, total_bytes, "Disassembling")
+                draw_progress(ptr, total_bytes, "Disassembling")
 
         draw_progress(total_bytes, total_bytes, "Disassembling")
         
