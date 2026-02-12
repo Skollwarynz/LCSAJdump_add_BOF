@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="lcsajdump",
-    version="1.0.6", 
+    version="1.0.0", 
     author="Chris1sFlaggin",
     author_email="lcsajdump@chris1sflaggin.it",
     description="A Graph-Based ROP Gadget Finder for RISC-V architectures",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/chris1sflaggin/lcsajdump",
+    url="https://chris1sflaggin.it/LCSAJdump/",
     
     packages=find_packages(exclude=[
         "testCTFs*",       

@@ -36,21 +36,21 @@ class BinaryLoader:
         Apre il file ELF, cerca la sezione .text (codice eseguibile)
         e la carica in memoria.
         """
-        print(f"[*] Caricamento binario: {self.path}")
+        print(f"[*] Loadaing binary: {self.path}")
         try:
             with open(self.path, 'rb') as f:
                 elf = ELFFile(f)
                 text_section = elf.get_section_by_name('.text')
                 
                 if not text_section:
-                    raise ValueError("Errore: Sezione .text non trovata nel binario!")
+                    raise ValueError("Error: Section .text not found in binary!")
                 
                 self.code_bytes = text_section.data()
                 self.base_addr = text_section['sh_addr']
                 
-                print(f"[*] Sezione .text trovata.")
-                print(f"    Dimensione: {len(self.code_bytes)} bytes")
-                print(f"    Indirizzo Base: {hex(self.base_addr)}\n")
+                print(f"[*] Section .text found.")
+                print(f"    Dimension: {len(self.code_bytes)} bytes")
+                print(f"    Start Address: {hex(self.base_addr)}\n")
                 
         except FileNotFoundError:
             print(f"[!] Errore: File {self.path} non trovato.")
@@ -63,7 +63,7 @@ class BinaryLoader:
         if self.code_bytes is None:
             self.load()
             
-        print("[*] Avvio disassemblaggio con Capstone...")
+        print("[*] Capstone is disassembling...")
         
         instructions = []
         total_bytes = len(self.code_bytes)
@@ -96,5 +96,5 @@ class BinaryLoader:
                 ptr += 2
 
         draw_progress(total_bytes, total_bytes, "Disassembling")
-        print(f"[*] Disassemblaggio completato. {len(instructions)} istruzioni estratte.\n")
+        print(f"[*] Disassembling complete. {len(instructions)} instructions estracted.\n")
         return instructions

@@ -17,7 +17,7 @@ class LCSAJGraph:
     def _create_nodes(self):
         if not self.instructions: return
 
-        print("[*] Costruzione Nodi LCSAJ...") 
+        print("[*] Building LCSAJ Nodes...") 
         
         total_insns = len(self.instructions)
         current_block_insns = []

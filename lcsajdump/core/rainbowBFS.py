@@ -38,7 +38,7 @@ class RainbowFinder:
         return score
 
     def search(self):
-        print(f"\n[*] Configurazione Rainbow: Depth={self.MAX_DEPTH}, Darkness={self.MAX_DARKNESS}")
+        print(f"\n[*] RainbowBFS config: Depth={self.MAX_DEPTH}, Darkness={self.MAX_DARKNESS}")
         tails = self.gm.get_gadget_tails()
         queue = collections.deque([([t['start']], {t['start']}) for t in tails])
         node_darkness = collections.defaultdict(int)
@@ -59,7 +59,7 @@ class RainbowFinder:
                 node_darkness[parent] += 1
                 queue.append(([parent] + path, visited | {parent}))
         
-        print(f"[*] Pruning effettuato: {pruned} rami tagliati.")
+        print(f"[*] Pruning: {pruned} pruned branches.")
         return self.gadgets
 
     def _classify_gadget(self, path):
