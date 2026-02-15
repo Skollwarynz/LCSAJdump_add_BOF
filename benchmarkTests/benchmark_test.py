@@ -13,8 +13,8 @@ MAX_K = 20
 MIN_D = 1
 MAX_D = 50
 
-TARGET_BINARY = "testCTFs/nightmare/vuln"
-OUTPUT_CSV = "lcsajdump_rop_vuln_benchmark.csv"
+TARGET_BINARY = "../testCTFs/onlineRop/vuln"
+OUTPUT_CSV = "lcsajdump_online_vuln_benchmark.csv"
 # ==================================================
 
 def load_existing_progress(filename):
