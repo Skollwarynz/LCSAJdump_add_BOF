@@ -1,14 +1,12 @@
 import collections
 
 class RainbowFinder:
-    jump_mnemonics = ['j', 'c.j', 'jal', 'c.jal']
-
     def __init__(self, graph_manager, max_depth, max_darkness):
         self.gm = graph_manager
         self.gadgets = []
-        
         self.MAX_DEPTH = max_depth
         self.MAX_DARKNESS = max_darkness
+        self.profile = self.gm.profile 
 
     def score_gadget(self, path):
         score = 100
@@ -17,22 +15,24 @@ class RainbowFinder:
             if addr in self.gm.addr_to_node:
                 full_insns.extend(self.gm.addr_to_node[addr]['insns'])
         
-        # v4 fix: togliere anche (len(path) * 10) era troppo penalizzante per gadget LCSAJ
         score -= (len(full_insns) * 2)
         
-        has_ra = any('ra' in i.op_str and 'ld' in i.mnemonic for i in full_insns)
-        has_a0 = any('a0' in i.op_str and 'ld' in i.mnemonic for i in full_insns)
-        # v4 fix: premiare i salti trampolino
-        has_J = any(i.mnemonic in self.jump_mnemonics for i in full_insns)
+        l_reg = self.profile["link_reg"]
+        a_reg = self.profile["primary_arg_reg"]
+        t_mnems = self.profile["trampoline_mnems"]
+        r_mnems = self.profile["ret_mnems"]
 
-        if has_ra: score += 50
-        if has_a0: score += 40
+        has_link_reg = any(l_reg in i.op_str and 'ld' in i.mnemonic.lower() for i in full_insns)
+        has_arg_reg = any(a_reg in i.op_str for i in full_insns)
+        has_J = any(i.mnemonic.lower() in t_mnems for i in full_insns)
+
+        if has_link_reg: score += 50
+        if has_arg_reg: score += 40
         if has_J: score += 30
 
-        # Penalità JOP (Salti a registro non-ra)
         if full_insns:
             last = full_insns[-1]
-            if last.mnemonic in ['jr', 'jalr', 'c.jr', 'c.jalr'] and 'ra' not in last.op_str:
+            if last.mnemonic.lower() in r_mnems and l_reg not in last.op_str:
                  score -= 20
 
         return score
@@ -40,44 +40,50 @@ class RainbowFinder:
     def search(self):
         print(f"\n[*] RainbowBFS config: Depth={self.MAX_DEPTH}, Darkness={self.MAX_DARKNESS}")
         tails = self.gm.get_gadget_tails()
-        queue = collections.deque([([t['start']], {t['start']}) for t in tails])
+        
+        queue = collections.deque([[t['start']] for t in tails])
         node_darkness = collections.defaultdict(int)
         pruned = 0
 
         while queue:
-            path, visited = queue.popleft()
+            path = queue.popleft()
             head = path[0]
-            # V4 fix: '>' was blocking sequential gadgets
-            if len(path) >= 1: self.gadgets.append(path)
-            if len(path) >= self.MAX_DEPTH: continue
+            
+            if len(path) >= 1: 
+                self.gadgets.append(path)
+            
+            if len(path) >= self.MAX_DEPTH: 
+                continue
 
             for parent in self.gm.reverse_graph.get(head, []):
-                if parent in visited: continue
+                if parent in path: 
+                    continue
+                
                 if node_darkness[parent] >= self.MAX_DARKNESS:
                     pruned += 1
                     continue
+                
                 node_darkness[parent] += 1
-                queue.append(([parent] + path, visited | {parent}))
+                queue.append([parent] + path)
         
         print(f"[*] Pruning: {pruned} pruned branches.")
         return self.gadgets
 
     def _classify_gadget(self, path):
-        """Ritorna una etichetta e una categoria per il gadget"""
         if len(path) == 1:
             return "LINEAR", "Sequential"
         
-        # Analizziamo il tipo di salto
         first_node = self.gm.addr_to_node[path[0]]
         last_insn = first_node['last_insn']
         mnem = last_insn.mnemonic.lower()
         
-        if mnem in ['j', 'c.j', 'jal', 'c.jal']:
-            return "TRAMPOLINE", "Jump-Based" # Salta sopra ostacoli
-        elif mnem.startswith('b') or mnem.startswith('c.b'):
-            return "CONDITIONAL", "Jump-Based" # Logica if/else
+        # Usa il profilo per decidere il tipo
+        if mnem in self.profile["unconditional_jumps"] and mnem not in self.profile["ret_mnems"]:
+            return "TRAMPOLINE", "Jump-Based"
+        elif mnem.startswith(self.profile["branch_prefixes"]):
+            return "CONDITIONAL", "Jump-Based"
         else:
-            return "FALLTHROUGH", "Jump-Based" # Discontinuità di memoria
+            return "FALLTHROUGH", "Jump-Based"
 
     def print_gadgets(self, limit, min_score, verbose=False):
         categories = {'Sequential': [], 'Jump-Based': []}
@@ -87,6 +93,7 @@ class RainbowFinder:
             if s < min_score: continue
             
             tag, cat = self._classify_gadget(g)
+            if cat not in categories: cat = 'Sequential'
             categories[cat].append((s, g, tag)) 
 
         for cat_name in ['Sequential', 'Jump-Based']:
@@ -101,15 +108,17 @@ class RainbowFinder:
                 if verbose:
                     print(f"\nRANK #{i+1} | SCORE: {s} | TYPE: {tag}")
                     for addr in p:
-                        node = self.gm.addr_to_node[addr]
-                        for insn in node['insns']:
-                             print(f"  \033[33m{hex(insn.address)}\033[0m: {insn.mnemonic} {insn.op_str}")
+                        if addr in self.gm.addr_to_node:
+                            node = self.gm.addr_to_node[addr]
+                            for insn in node['insns']:
+                                 print(f"  \033[33m{hex(insn.address)}\033[0m: {insn.mnemonic} {insn.op_str}")
                 else:
                     full_gadget_str = []
                     for addr in p:
-                        node = self.gm.addr_to_node[addr]
-                        for insn in node['insns']:
-                            full_gadget_str.append(f"{insn.mnemonic} {insn.op_str}")
+                        if addr in self.gm.addr_to_node:
+                            node = self.gm.addr_to_node[addr]
+                            for insn in node['insns']:
+                                full_gadget_str.append(f"{insn.mnemonic} {insn.op_str}")
                     
                     start_addr = hex(p[0])
                     print(f"\033[33m{start_addr}\033[0m: {'; '.join(full_gadget_str)}")

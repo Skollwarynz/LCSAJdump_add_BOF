@@ -6,32 +6,33 @@ from .core.rainbowBFS import RainbowFinder
 
 @click.command()
 @click.argument('binary_path', type=click.Path(exists=True))
-@click.option('--depth', '-d', default=12, help='Profondità massima di ricerca (blocchi LCSAJ).')
-@click.option('--darkness', '-k', default=30, help='Soglia di pruning (Max visite per nodo).')
-@click.option('--limit', '-l', default=10, help='Numero di gadget da mostrare a video.')
-@click.option('--min-score', '-s', default=0, help='Punteggio minimo per mostrare un gadget.')
-@click.option('--verbose', '-v', is_flag=True, help='Mostra dettagli extra sui gadget trovati.')
-@click.version_option(version='1.0.0', prog_name='LCSAJdump')
-def main(binary_path, depth, darkness, limit, min_score, verbose):
+@click.option('--depth', '-d', default=12, help='Max search depth (LCSAJ blocks).')
+@click.option('--darkness', '-k', default=30, help='Pruning threshold (Max visits per node).')
+@click.option('--limit', '-l', default=10, help='Desired number of gadgets to show.')
+@click.option('--min-score', '-s', default=0, help='Min score for a gadget to be shown.')
+@click.option('--verbose', '-v', is_flag=True, help='Verbose results for a better detailed result.')
+@click.option('--arch', '-a', default='riscv64', help='Architecture of the binary (default: riscv64).')
+@click.version_option(version='1.0.1', prog_name='LCSAJdump')
+def main(binary_path, depth, darkness, limit, min_score, verbose, arch):
     """
     RISC-V LCSAJ ROP Finder.
     Analizza un binario per trovare gadget ROP usando l'algoritmo Rainbow BFS.
     """
     print('\33[33m'+r"""
-        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██████╗     ██████╗ 
-        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║███║   ██╔═████╗   ██╔═████╗
-        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║╚██║   ██║██╔██║   ██║██╔██║
-        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║   ████╔╝██║   ████╔╝██║
-        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗╚██████╔╝▄█╗╚██████╔╝
-        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═════╝ ╚═╝ ╚═════╝                                                                                                                                
+        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██████╗     ██╗
+        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║███║   ██╔═████╗   ███║
+        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║╚██║   ██║██╔██║   ╚██║
+        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║   ████╔╝██║    ██║
+        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗╚██████╔╝▄█╗ ██║
+        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═════╝ ╚═╝ ╚═╝                                                                                                                               
     """+'\33[0m')
 
     print(f"[*] Analizing Target: {binary_path}")
     
-    loader = BinaryLoader(binary_path)
+    loader = BinaryLoader(binary_path, arch)
     insns = loader.disassemble()
     
-    gb = LCSAJGraph(insns)
+    gb = LCSAJGraph(insns, arch)
     gb.build()
     
     finder = RainbowFinder(gb, max_depth=depth, max_darkness=darkness)

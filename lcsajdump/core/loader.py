@@ -1,42 +1,34 @@
 import capstone
 from elftools.elf.elffile import ELFFile
 import sys
+from .config import ARCH_PROFILES
 
 def draw_progress(current, total, label=""):
     percent = float(current) / float(total) * 100
     bar_length = 60
     filled_length = int(bar_length * current // total)
-    
     bar = '█' * filled_length + '░' * (bar_length - filled_length)
-    
     sys.stdout.write(f"\r{label:15} \033[32m[{bar}]\033[0m {percent:>5.1f}%")
     sys.stdout.flush()
-    
     if current == total:
         print()
 
 class BinaryLoader:
-    def __init__(self, path):
+    def __init__(self, path, arch):
         self.path = path
+        self.arch = arch
+        self.profile = ARCH_PROFILES.get(arch)
+        
+        if not self.profile:
+            raise ValueError(f"Architettura {arch} non supportata o non configurata.")
+        
+        self.md = capstone.Cs(self.profile["cs_arch"], self.profile["cs_mode"])
+        self.md.detail = True 
         self.code_bytes = None
         self.base_addr = 0
-        
-        # --- CONFIGURAZIONE CAPSTONE ---
-        # CS_ARCH_RISCV: Architettura principale
-        # CS_MODE_RISCV64: Modalità a 64-bit
-        # CS_MODE_RISCVC: Abilita le istruzioni "Compressed" (16-bit).
-        self.md = capstone.Cs(capstone.CS_ARCH_RISCV, 
-                              capstone.CS_MODE_RISCV64 | capstone.CS_MODE_RISCVC)
-        
-        # Abilitiamo i dettagli per poter analizzare gli operandi (registri, imm) dopo
-        self.md.detail = True 
 
     def load(self):
-        """
-        Apre il file ELF, cerca la sezione .text (codice eseguibile)
-        e la carica in memoria.
-        """
-        print(f"[*] Loadaing binary: {self.path}")
+        print(f"[*] Loading binary: {self.path}")
         try:
             with open(self.path, 'rb') as f:
                 elf = ELFFile(f)
@@ -49,7 +41,7 @@ class BinaryLoader:
                 self.base_addr = text_section['sh_addr']
                 
                 print(f"[*] Section .text found.")
-                print(f"    Dimension: {len(self.code_bytes)} bytes")
+                print(f"    Size: {len(self.code_bytes)} bytes")
                 print(f"    Start Address: {hex(self.base_addr)}\n")
                 
         except FileNotFoundError:
@@ -68,13 +60,12 @@ class BinaryLoader:
         instructions = []
         total_bytes = len(self.code_bytes)
         ptr = 0
+        step = self.profile["step"] 
         
         while ptr < total_bytes:
             curr_addr = self.base_addr + ptr
             
-            # v6 OTTIMIZZAZIONE: Invece di chiederne 1 alla volta,
             try:
-                # Slicing (solo con buco nel codice)
                 chunk = self.code_bytes[ptr:]
                 disasm_iter = self.md.disasm(chunk, curr_addr)
                 
@@ -87,14 +78,12 @@ class BinaryLoader:
                     if len(instructions) % 5000 == 0:
                         draw_progress(ptr, total_bytes, "Disassembling")
                 
-                # Se count == 0, significa che Capstone si è bloccato SUBITO.
-                # Quindi il byte a 'ptr' è sporco.
                 if count == 0:
-                    ptr += 2 
+                    ptr += step
                     
             except Exception:
-                ptr += 2
+                ptr += step
 
         draw_progress(total_bytes, total_bytes, "Disassembling")
-        print(f"[*] Disassembling complete. {len(instructions)} instructions estracted.\n")
+        print(f"[*] Disassembling complete. {len(instructions)} instructions extracted.\n")
         return instructions

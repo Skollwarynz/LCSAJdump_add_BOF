@@ -1,14 +1,29 @@
 import networkx as nx
-from .loader import draw_progress
+import re
+from collections import defaultdict
+from .loader import draw_progress 
+from .config import ARCH_PROFILES
+
+RE_HEX = re.compile(r'0x[0-9a-fA-F]+')
 
 class LCSAJGraph:
-    def __init__(self, instructions):
-        self.instructions = instructions
-        self.graph = nx.DiGraph()
-        self.addr_to_node = {} # Inizio blocco -> Dati blocco
-        self.insn_to_block_start = {} # Indirizzo istruzione -> Inizio blocco di appartenenza
-        self.reverse_graph = {} 
+    def __init__(self, instructions, arch="riscv64"):
+        self.instructions = instructions 
+        self.arch = arch
+        
+        profile_data = ARCH_PROFILES[arch]
+        self.profile = profile_data 
+        
+        self.jump_mnems = set(profile_data["jump_mnems"])
+        self.unconditional_jumps = set(profile_data["unconditional_jumps"])
+        self.ret_mnems = set(profile_data["ret_mnems"])
+        self.branch_prefixes = profile_data["branch_prefixes"] 
+        
         self.nodes = []
+        self.addr_to_node = {} 
+        self.insn_to_block_start = {} 
+        self.reverse_graph = defaultdict(list) 
+        self.graph = nx.DiGraph()
 
     def build(self):
         self._create_nodes()
@@ -16,24 +31,22 @@ class LCSAJGraph:
 
     def _create_nodes(self):
         if not self.instructions: return
-
-        print("[*] Building LCSAJ Nodes...") 
-        
         total_insns = len(self.instructions)
         current_block_insns = []
         block_start = self.instructions[0].address 
+        
+        jump_mnems = self.jump_mnems
+        branch_prefixes = self.branch_prefixes
 
+        print(f"[*] Building LCSAJ Nodes for {self.arch}...")
         for idx, insn in enumerate(self.instructions):
-            
-            if idx % 1000 == 0:
+            if idx % 5000 == 0: 
                 draw_progress(idx, total_insns, "Building Graph")
 
             current_block_insns.append(insn)
             mnem = insn.mnemonic.lower()
             
-            is_jump = mnem in ['ret', 'c.jr', 'c.jalr', 'jr', 'jalr'] or \
-                      mnem in ['j', 'jal', 'c.j', 'c.jal'] or \
-                      mnem.startswith('b') or mnem.startswith('c.b')
+            is_jump = mnem in jump_mnems or mnem.startswith(branch_prefixes)
 
             if is_jump:
                 self._add_node(block_start, current_block_insns)
@@ -43,7 +56,6 @@ class LCSAJGraph:
 
         if current_block_insns:
             self._add_node(block_start, current_block_insns)
-            
         draw_progress(total_insns, total_insns, "Building Graph")
 
     def _add_node(self, start, insns):
@@ -54,29 +66,34 @@ class LCSAJGraph:
             self.insn_to_block_start[i.address] = start
 
     def _build_edges(self):
+        print("[*] Building edges...")
+        insn_map = self.insn_to_block_start
+        uncond_jumps = self.unconditional_jumps
+        jump_mnems = self.jump_mnems
+        branch_prefixes = self.branch_prefixes
+        rev_graph = self.reverse_graph
+
         for node in self.nodes:
             last = node['last_insn']
             mnem = last.mnemonic.lower()
-            targets = []
-
-            if mnem not in ['j', 'jal', 'c.j', 'c.jal', 'ret', 'jr', 'c.jr']:
+            start_addr = node['start']
+            
+            # (Fallthrough)
+            if mnem not in uncond_jumps:
                 next_addr = last.address + last.size
-                if next_addr in self.insn_to_block_start:
-                    targets.append(self.insn_to_block_start[next_addr])
+                if next_addr in insn_map:
+                    target = insn_map[next_addr]
+                    rev_graph[target].append(start_addr)
 
-            if mnem.startswith('b') or mnem in ['jal', 'j', 'c.j', 'c.jal']:
-                try:
-                    import re
-                    hex_match = re.findall(r'0x[0-9a-fA-F]+', last.op_str)
-                    if hex_match:
-                        addr = int(hex_match[-1], 16)
-                        if addr in self.insn_to_block_start:
-                            targets.append(self.insn_to_block_start[addr])
-                except: pass
-
-            for t in set(targets):
-                if t not in self.reverse_graph: self.reverse_graph[t] = []
-                self.reverse_graph[t].append(node['start'])
+            # (Branch/Jump)
+            if mnem in jump_mnems or mnem.startswith(branch_prefixes):
+                hex_match = RE_HEX.findall(last.op_str)
+                if hex_match:
+                    addr = int(hex_match[-1], 16)
+                    if addr in insn_map:
+                        target = insn_map[addr]
+                        rev_graph[target].append(start_addr)
 
     def get_gadget_tails(self):
-        return [n for n in self.nodes if n['last_insn'].mnemonic.lower() in ['ret', 'c.jr', 'jr', 'jalr']]
+        ret_mnems = self.ret_mnems
+        return [n for n in self.nodes if n['last_insn'].mnemonic.lower() in ret_mnems]
