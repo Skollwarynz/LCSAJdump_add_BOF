@@ -85,40 +85,82 @@ class RainbowFinder:
         else:
             return "FALLTHROUGH", "Jump-Based"
 
-    def print_gadgets(self, limit, min_score, verbose=False):
-        categories = {'Sequential': [], 'Jump-Based': []}
+    def print_gadgets(self, limit, min_score, verbose):
+        if verbose:
+            print(f"\n[*] Verbose Mode: Showing all {len(self.gadgets)} gadgets individually...")
+            categories = {'Sequential': [], 'Jump-Based': []}
 
-        for g in self.gadgets:
-            s = self.score_gadget(g)
-            if s < min_score: continue
-            
-            tag, cat = self._classify_gadget(g)
-            if cat not in categories: cat = 'Sequential'
-            categories[cat].append((s, g, tag)) 
+            for g in self.gadgets:
+                s = self.score_gadget(g)
+                if s < min_score: continue
+                
+                tag, cat = self._classify_gadget(g)
+                if cat not in categories: cat = 'Sequential'
+                categories[cat].append((s, g, tag)) 
 
-        for cat_name in ['Sequential', 'Jump-Based']:
-            gadgets = categories[cat_name]
-            gadgets.sort(key=lambda x: x[0], reverse=True)
-            
-            print(f"\033[33m\n{'='*60}\033[0m")
-            print(f"\033[33m--- TOP {limit} {cat_name.upper()} GADGETS ---\033[0m")
-            print(f"\033[33m{'='*60}\033[0m")
-            
-            for i, (s, p, tag) in enumerate(gadgets[:limit]):
-                if verbose:
+            for cat_name in ['Sequential', 'Jump-Based']:
+                gadgets = categories[cat_name]
+                gadgets.sort(key=lambda x: x[0], reverse=True)
+                
+                print(f"\033[33m\n{'='*60}\033[0m")
+                print(f"\033[33m--- TOP {limit} {cat_name.upper()} GADGETS (RAW VIEW) ---\033[0m")
+                print(f"\033[33m{'='*60}\033[0m")
+                
+                for i, (s, p, tag) in enumerate(gadgets[:limit]):
                     print(f"\nRANK #{i+1} | SCORE: {s} | TYPE: {tag}")
                     for addr in p:
                         if addr in self.gm.addr_to_node:
                             node = self.gm.addr_to_node[addr]
                             for insn in node['insns']:
-                                 print(f"  \033[33m{hex(insn.address)}\033[0m: {insn.mnemonic} {insn.op_str}")
-                else:
-                    full_gadget_str = []
-                    for addr in p:
-                        if addr in self.gm.addr_to_node:
-                            node = self.gm.addr_to_node[addr]
-                            for insn in node['insns']:
-                                full_gadget_str.append(f"{insn.mnemonic} {insn.op_str}")
+                                    print(f"  \033[33m{hex(insn.address)}\033[0m: {insn.mnemonic} {insn.op_str}")
+
+        else:
+            unique_gadgets = {'Sequential': {}, 'Jump-Based': {}}
+            
+            for g in self.gadgets:
+                s = self.score_gadget(g)
+                if s < min_score: continue
+                
+                tag, cat = self._classify_gadget(g)
+                if cat not in unique_gadgets: cat = 'Sequential'
+                
+                full_gadget_insns = []
+                for addr in g:
+                    if addr in self.gm.addr_to_node:
+                        node = self.gm.addr_to_node[addr]
+                        for insn in node['insns']:
+                            full_gadget_insns.append(f"{insn.mnemonic} {insn.op_str}")
+                
+                signature = "; ".join(full_gadget_insns)
+                
+                if signature not in unique_gadgets[cat]:
+                    unique_gadgets[cat][signature] = {
+                        'score': s,
+                        'type': tag,
+                        'addresses': [] 
+                    }
+                
+                unique_gadgets[cat][signature]['addresses'].append(g[0])
+
+            for cat_name in ['Sequential', 'Jump-Based']:
+                sorted_gadgets = sorted(
+                    unique_gadgets[cat_name].items(), 
+                    key=lambda x: x[1]['score'], 
+                    reverse=True
+                )
+                
+                print(f"\033[33m\n{'='*80}\033[0m")
+                print(f"\033[33m--- TOP {limit} UNIQUE {cat_name.upper()} GADGETS ---\033[0m")
+                print(f"\033[33m{'='*80}\033[0m")
+                
+                for i, (sig, data) in enumerate(sorted_gadgets[:limit]):
+                    addrs = data['addresses']
+                    count = len(addrs)
                     
-                    start_addr = hex(p[0])
-                    print(f"\033[33m{start_addr}\033[0m: {'; '.join(full_gadget_str)}")
+                    primary_addr = hex(addrs[0])
+                    
+                    print(f"\033[33m{primary_addr}\033[0m: {sig}")
+                    
+                    if count > 1:
+                        others = ", ".join([hex(a) for a in addrs[1:]])
+                        print(f"  \033[90mFound {count} times (at {others})\033[0m")
