@@ -6,25 +6,25 @@ from .core.rainbowBFS import RainbowFinder
 
 @click.command()
 @click.argument('binary_path', type=click.Path(exists=True))
-@click.option('--depth', '-d', default=40, help='Max search depth (LCSAJ blocks).')
-@click.option('--darkness', '-k', default=15, help='Pruning threshold (Max visits per node).')
+@click.option('--depth', '-d', default=30, help='Max search depth (LCSAJ blocks).')
+@click.option('--darkness', '-k', default=5, help='Pruning threshold (Max visits per node).')
 @click.option('--limit', '-l', default=10, help='Desired number of gadgets to show.')
 @click.option('--min-score', '-s', default=0, help='Min score for a gadget to be shown.')
 @click.option('--verbose', '-v', is_flag=True, help='Verbose results for a better detailed result.')
 @click.option('--arch', '-a', default='riscv64', help='Architecture of the binary (default: riscv64).')
-@click.version_option(version='1.0.3', prog_name='LCSAJdump')
+@click.version_option(version='1.1.0', prog_name='LCSAJdump')
 def main(binary_path, depth, darkness, limit, min_score, verbose, arch):
     """
     LCSAJ ROP Finder.
     Analyze a binary to find ROP gadgets using Rainbow BFS algorithm.
     """
     print('\33[33m'+r"""
-        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██████╗    ██████╗ 
-        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║███║   ██╔═████╗   ╚════██╗
-        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║╚██║   ██║██╔██║    █████╔╝
-        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║   ████╔╝██║    ╚═══██╗
-        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗╚██████╔╝▄█╗██████╔╝
-        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═════╝ ╚═╝╚═════╝                                                                                                                                
+        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██╗    ██████╗ 
+        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║███║   ███║   ██╔═████╗
+        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║╚██║   ╚██║   ██║██╔██║
+        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║    ██║   ████╔╝██║
+        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗ ██║██╗╚██████╔╝
+        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═╝╚═╝ ╚═════╝                                                                                                                                
     """+'\33[0m')
 
     print(f"[*] Analizing Target: {binary_path}")
