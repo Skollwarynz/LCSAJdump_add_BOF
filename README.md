@@ -87,7 +87,7 @@ python LCSAJdump.py -a riscv64 -d 15 -k 100 -l 20 --verbose <path_to_binary>
 
 ### CLI Options:
 
-![LCSAJdump Demo](_images/lcsajdump_help.gif)
+[![LCSAJdump Demo_Help](https://asciinema.org/a/nn9IimXht3nl3ozj.svg)](https://asciinema.org/a/nn9IimXht3nl3ozj)
 
 ---
 
