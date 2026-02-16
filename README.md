@@ -93,7 +93,7 @@ python LCSAJdump.py -a riscv64 -d 15 -k 100 -l 20 --verbose <path_to_binary>
 
 ## Output Example
 
-![LCSAJdump Demo](https://asciinema.org/a/5MuMIvoIlZaPZQmX)
+[![LCSAJdump Demo](https://asciinema.org/a/5MuMIvoIlZaPZQmX.svg)](https://asciinema.org/a/5MuMIvoIlZaPZQmX)
 
 ---
 
