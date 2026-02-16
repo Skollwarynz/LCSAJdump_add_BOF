@@ -5,7 +5,7 @@ import sys
 import os
 
 # Nome del file CSV generato dal benchmark
-CSV_FILE = "lcsajdump_online_vuln_benchmark.csv"
+CSV_FILE = "benchmark_libc.so.6.csv"
 
 def analyze_data():
     if not os.path.exists(CSV_FILE):
