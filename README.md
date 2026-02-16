@@ -87,35 +87,13 @@ python LCSAJdump.py -a riscv64 -d 15 -k 100 -l 20 --verbose <path_to_binary>
 
 ### CLI Options:
 
-* `-a, --arch`: Specify the target architecture (e.g., `riscv64`).
-* `-d, --depth`: Maximum search depth (in LCSAJ blocks).
-* `-k, --darkness`: Pruning threshold (maximum visits per node) to handle cyclic graphs.
-* `-l, --limit`: Limit of gadgets to display in the final report.
-* `-v, --verbose`: Detailed output for instruction debugging.
+![LCSAJdump Demo](_images/lcsajdump_help.gif)
 
 ---
 
 ## Output Example
 
-```text
-❯ lcsajdump testCTFs/rop2/vuln
-[*] Analyzing Target: testCTFs/rop2/vuln
-[*] Section .text found (Size: 258706 bytes)
-[*] Capstone is disassembling...
-Disassembling   [████████████████████████] 100.0%
-[*] Building LCSAJ Nodes for riscv64...
-Building Graph  [████████████████████████] 100.0%
-[*] Pruning complete: 0 branches cut.
-
---- TOP 10 SEQUENTIAL GADGETS ---
-0x3049c: c.ldsp ra, 0x98(sp); c.addi16sp sp, 0xa0; c.jr ra
-0x109fc: c.ldsp ra, 0x18(sp); c.li a0, 0; c.jr ra
-
---- TOP 10 JUMP-BASED GADGETS ---
-0x2d494: c.mv a0, s6; jal -0x14e74; c.ldsp ra, 0x18(sp); c.jr ra
-0x1f6ae: c.mv a1, sp; jal 0x17b24; c.ldsp ra, 0x88(sp); c.jr ra
-
-```
+![LCSAJdump Demo](_images/lcsajdump_demo.gif)
 
 ---
 
