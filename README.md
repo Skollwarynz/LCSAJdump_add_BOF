@@ -4,6 +4,8 @@
 
 # LCSAJdump
 
+[![Downloads](https://static.pepy.tech/badge/lcsajdump)](https://pepy.tech/project/lcsajdump)
+
 ### *Universal Graph-Based Framework for Automated Gadget Discovery*
 
 [![Status](https://img.shields.io/badge/status-Universal_Framework-orange?style=for-the-badge)](https://github.com/Chris1sFlaggin/LCSAJdump)
