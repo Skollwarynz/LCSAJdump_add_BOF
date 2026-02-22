@@ -21,5 +21,27 @@ ARCH_PROFILES = {
         "link_reg": "ra",           
         "primary_arg_reg": "a0",    
         "trampoline_mnems": {'j', 'c.j', 'jal', 'c.jal'} 
+    },
+    "x86_64": {
+        "name": "x86-64",
+        "cs_arch": capstone.CS_ARCH_X86,
+        "cs_mode": capstone.CS_MODE_64,
+        "step": 1, # no alignment restrictions for x86
+        
+        # --- CONTROL FLOW & TERMINATORS ---
+        "jump_mnems": {'jmp', 'call', 'ret', 'retf', 'iret', 'syscall', 'sysenter', 'int'},
+        
+        # ADDED SYSCALLS HERE: Treat them as valid unconditional transfers
+        "unconditional_jumps": {'jmp', 'call', 'ret', 'retf', 'iret', 'syscall', 'sysenter', 'int'},
+        
+        # ADDED SYSCALLS HERE: Trick the engine into treating them as valid gadget sinks
+        "ret_mnems": {'ret', 'retn', 'retf', 'iret', 'syscall', 'int', 'sysenter'},
+        
+        "branch_prefixes": ('j', 'loop'), 
+        
+        # --- SCORING PARAMETERS ---
+        "link_reg": {"rip", "rsp"}, 
+        "primary_arg_reg": "rdi",      
+        "trampoline_mnems": {'jmp', 'call'} 
     }
 }

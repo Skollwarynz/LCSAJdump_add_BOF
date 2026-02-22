@@ -17,13 +17,20 @@ class RainbowFinder:
         
         score -= (len(full_insns) * 2)
         
-        l_reg = self.profile["link_reg"]
-        a_reg = self.profile["primary_arg_reg"]
-        t_mnems = self.profile["trampoline_mnems"]
-        r_mnems = self.profile["ret_mnems"]
+        l_reg = self.profile.get("link_reg")
+        a_reg = self.profile.get("primary_arg_reg")
+        t_mnems = self.profile.get("trampoline_mnems", set())
+        r_mnems = self.profile.get("ret_mnems", set())
 
-        has_link_reg = any(l_reg in i.op_str and 'ld' in i.mnemonic.lower() for i in full_insns)
-        has_arg_reg = any(a_reg in i.op_str for i in full_insns)
+        def reg_in_op(reg_config, op_str):
+            if not reg_config:
+                return False
+            if isinstance(reg_config, str):
+                return reg_config in op_str
+            return any(r in op_str for r in reg_config)
+
+        has_link_reg = any(reg_in_op(l_reg, i.op_str) for i in full_insns)
+        has_arg_reg = any(reg_in_op(a_reg, i.op_str) for i in full_insns)
         has_J = any(i.mnemonic.lower() in t_mnems for i in full_insns)
 
         if has_link_reg: score += 50
@@ -32,7 +39,7 @@ class RainbowFinder:
 
         if full_insns:
             last = full_insns[-1]
-            if last.mnemonic.lower() in r_mnems and l_reg not in last.op_str:
+            if last.mnemonic.lower() in r_mnems and not reg_in_op(l_reg, last.op_str):
                  score -= 20
 
         return score
