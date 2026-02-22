@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="_images/LOGO.png" width="60%" alt="LCSAJdump Logo"/>
+<a href='https://chris1sflaggin.it/LCSAJdump'><img src="_images/LOGO.png" width="60%" alt="LCSAJdump Logo"/></a>
 
-# LCSAJdump
+# [LCSAJdump](https://chris1sflaggin.it/LCSAJdump)
 
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/lcsajdump?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/lcsajdump)
 
