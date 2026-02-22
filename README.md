@@ -47,7 +47,7 @@ LCSAJdump is designed to be universal. Currently supported:
 * **RISC-V 64-bit (RV64GC):** Full support for compressed 16-bit instructions.
 * **x86-64:** Beta support for variable-length instructions and 
 misaligned gadget discovery. Higher state explosion risk — lower depth/darkness 
-values recommended (see [Benchmarks](https://chris1sflaggin.it/LCSAJdump#benchmarks).
+values recommended (see [Benchmarks](https://chris1sflaggin.it/LCSAJdump#benchmarks)).
 * **Other Architectures:** Can be implemented by defining new profiles in `config.py`.
 
 ---
