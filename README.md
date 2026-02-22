@@ -32,11 +32,11 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 
 ## Key Features
 
-* **Multi-Architecture Support:** Native support for RISC-V (64GC) and easily extensible to x86, ARM, and MIPS via modular profiles.
+* **Multi-Architecture Support:** Native support for RISC-V (64GC) and x86-64 (beta), easily extendable to ARM, and MIPS via modular profiles.
 * **Graph-Based Analysis:** Segments the `.text` section into LCSAJ basic blocks and reconstructs flow relationships using `NetworkX`.
-* **Rainbow BFS Algorithm:** proprietary backward Breadth-First Search starting from control-flow sinks (`ret`, `jr`, `jalr`) to reconstruct valid execution paths.
-* **Heuristic Scoring:** Ranking system that prioritizes gadgets manipulating critical registers (e.g., `ra`, `a0`, `sp`).
-* **Pruning Parameters:** Configurable "Darkness" factor to balance analysis depth and performance, preventing infinite loops in cyclic graphs.
+* **Rainbow BFS Algorithm:** proprietary backward Breadth-First Search starting from control-flow sinks to reconstruct valid execution paths.
+* **Heuristic Scoring:** Ranking system that prioritizes gadgets manipulating critical registers.
+* **Pruning Parameters:** Configurable "Darkness" factor to balance analysis depth and performance, preventing infinite loops in cyclic graphs and allowing personalized experience.
 
 ---
 
@@ -45,6 +45,9 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 LCSAJdump is designed to be universal. Currently supported:
 
 * **RISC-V 64-bit (RV64GC):** Full support for compressed 16-bit instructions.
+* **x86-64:** Beta support for variable-length instructions and 
+misaligned gadget discovery. Higher state explosion risk — lower depth/darkness 
+values recommended (see [Benchmarks](https://chris1sflaggin.it/LCSAJdump#benchmarks).
 * **Other Architectures:** Can be implemented by defining new profiles in `config.py`.
 
 ---
