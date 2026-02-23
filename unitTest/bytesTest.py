@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from LCSAJdump.core.loader import BinaryLoader
-from LCSAJdump.core.graph import LCSAJGraph
-from LCSAJdump.core.rainbowBFS import RainbowFinder
+from lcsajdump.core.loader import BinaryLoader
+from lcsajdump.core.graph import LCSAJGraph
+from lcsajdump.core.rainbowBFS import RainbowFinder
 import capstone
 
 # Byte presi dai commenti del tuo exploit.py
@@ -15,7 +15,7 @@ START_ADDR = 0x4618c
 
 def test_decode_exploit_gadget():
     """Verifica che i byte specifici dell'exploit vengano decodificati correttamente."""
-    loader = BinaryLoader("dummy")
+    loader = BinaryLoader("dummy", "riscv64") # <- Aggiunto parametro arch
     loader.code_bytes = GADGET_BYTES
     loader.base_addr = START_ADDR
     
@@ -29,7 +29,7 @@ def test_decode_exploit_gadget():
 def test_find_exploit_gadget_logic():
     """Verifica che il RainbowFinder identifichi questa sequenza come gadget valido."""
     # 1. Setup Loader e Disassembly reale
-    loader = BinaryLoader("dummy")
+    loader = BinaryLoader("dummy", "riscv64") # <- Aggiunto parametro arch
     loader.code_bytes = GADGET_BYTES
     loader.base_addr = START_ADDR
     instructions = loader.disassemble()

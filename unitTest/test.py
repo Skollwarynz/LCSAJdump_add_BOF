@@ -1,14 +1,15 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from LCSAJdump.core.loader import BinaryLoader
-from LCSAJdump.core.graph import LCSAJGraph
-from LCSAJdump.core.rainbowBFS import RainbowFinder
+from lcsajdump.core.loader import BinaryLoader
+from lcsajdump.core.graph import LCSAJGraph
+from lcsajdump.core.rainbowBFS import RainbowFinder
 
 # 1. Test del Loader (Parsing delle istruzioni)
 def test_loader_disassemble_mock():
     # Mocking di capstone per testare la logica di disassemblaggio
     with patch('capstone.Cs') as mock_cs:
-        loader = BinaryLoader("fake_path")
+        # Aggiunto il parametro arch ("riscv64")
+        loader = BinaryLoader("fake_path", "riscv64")
         loader.code_bytes = b"\x01\x11\x05\x05" # Byte finti
         loader.base_addr = 0x1000
         
@@ -17,6 +18,7 @@ def test_loader_disassemble_mock():
         mock_insn.address = 0x1000
         mock_insn.mnemonic = "addi"
         mock_insn.op_str = "sp, sp, -16"
+        mock_insn.size = 4  # <- AGGIUNTO per evitare il crash del ciclo while
         
         mock_cs.return_value.disasm.return_value = [mock_insn]
         

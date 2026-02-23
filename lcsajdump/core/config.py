@@ -43,5 +43,22 @@ ARCH_PROFILES = {
         "link_reg": {"rip", "rsp"}, 
         "primary_arg_reg": "rdi",      
         "trampoline_mnems": {'jmp', 'call'} 
+    },
+    "arm64": {
+        "name": "ARM64 (AArch64)",
+        "cs_arch": capstone.CS_ARCH_AARCH64,
+        "cs_mode": capstone.CS_MODE_ARM,
+        "step": 4, # Le istruzioni ARM64 sono sempre di 4 byte
+        
+        # --- CONTROL FLOW & TERMINATORS ---
+        "jump_mnems": {'b', 'bl', 'br', 'blr', 'ret', 'svc'},
+        "unconditional_jumps": {'b', 'bl', 'br', 'blr', 'ret', 'svc'},
+        "ret_mnems": {'ret', 'br', 'blr', 'svc'},
+        "branch_prefixes": ('b.', 'cbz', 'cbnz', 'tbz', 'tbnz'), 
+        
+        # --- SCORING PARAMETERS ---
+        "link_reg": {"x30", "lr"}, 
+        "primary_arg_reg": "x0",      
+        "trampoline_mnems": {'b', 'bl', 'br', 'blr'} 
     }
 }

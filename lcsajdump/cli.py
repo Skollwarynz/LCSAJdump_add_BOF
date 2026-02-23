@@ -27,15 +27,17 @@ def main(binary_path, depth, darkness, limit, min_score, verbose, arch):
         ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═╝╚═╝ ╚═╝
 
 
-                               RISC-V                       ARM64 (shortly)                        x86-64 
+                               RISC-V                            ARM64                          x86-64 
           
           
         https://ko-fi.com/chris1sflaggin - Support the project!    |    https://chris1sflaggin.it/LCSAJdump/ - Official Website
     """+'\33[0m')
-
+    
+    '''
     if arch == 'arm64':
         print("\33[31m[!] ARM64 support is coming soon. Stay tuned!\33[0m")
         sys.exit(0)
+    '''
 
     if arch in ['riscv64', 'x86_64', 'intel64', 'amd64', 'x86']:
         arch = 'x86_64' 

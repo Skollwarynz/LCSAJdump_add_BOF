@@ -1,8 +1,8 @@
 import pytest
 import os
-from LCSAJdump.core.loader import BinaryLoader
-from LCSAJdump.core.graph import LCSAJGraph
-from LCSAJdump.core.rainbowBFS import RainbowFinder
+from lcsajdump.core.loader import BinaryLoader
+from lcsajdump.core.graph import LCSAJGraph
+from lcsajdump.core.rainbowBFS import RainbowFinder
 
 # Percorso relativo al file vulnerabile
 VULN_PATH = "testCTFs/rop/vuln"
@@ -11,8 +11,8 @@ VULN_PATH = "testCTFs/rop/vuln"
 def test_real_binary_gadget_discovery():
     print(f"\n[*] Testing su binario reale: {VULN_PATH}")
     
-    # 1. Caricamento Reale
-    loader = BinaryLoader(VULN_PATH)
+    # 1. Caricamento Reale (aggiunta l'architettura)
+    loader = BinaryLoader(VULN_PATH, "riscv64")
     loader.load()
     instructions = loader.disassemble()
     

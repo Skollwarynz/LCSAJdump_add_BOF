@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import MagicMock, patch
 import sys
-from LCSAJdump.core.loader import BinaryLoader
-from LCSAJdump.core.graph import LCSAJGraph
-from LCSAJdump.core.rainbowBFS import RainbowFinder
+from lcsajdump.core.loader import BinaryLoader
+from lcsajdump.core.graph import LCSAJGraph
+from lcsajdump.core.rainbowBFS import RainbowFinder
 
 # Helper per creare istruzioni mock
 def make_insn(addr, mnem, op_str, size=4):
@@ -21,12 +21,12 @@ def make_insn(addr, mnem, op_str, size=4):
 def test_loader_no_text_section():
     """Simula un ELF valido ma senza sezione .text."""
     with patch('builtins.open', new_callable=MagicMock), \
-         patch('LCSAJdump.core.loader.ELFFile') as mock_elf_class:
+         patch('lcsajdump.core.loader.ELFFile') as mock_elf_class: # <- Corretto in lcsajdump minuscolo
         
         mock_elf = mock_elf_class.return_value
         mock_elf.get_section_by_name.return_value = None # Nessuna .text
         
-        loader = BinaryLoader("empty.elf")
+        loader = BinaryLoader("empty.elf", "riscv64") # <- Aggiunta architettura
         
         # FIX: Il loader cattura l'eccezione e fa sys.exit(1), quindi ci aspettiamo SystemExit
         with pytest.raises(SystemExit) as pytest_wrapped_e:
@@ -35,7 +35,7 @@ def test_loader_no_text_section():
         assert pytest_wrapped_e.value.code == 1
 
 def test_loader_file_not_found():
-    loader = BinaryLoader("non_esiste.bin")
+    loader = BinaryLoader("non_esiste.bin", "riscv64") # <- Aggiunta architettura
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         loader.load()
     assert pytest_wrapped_e.type == SystemExit
@@ -118,7 +118,6 @@ def test_stress_large_binary_chain():
     assert max_len <= 50
 
 def test_rainbow_cycle_handling():
-    # ... (stesso codice del precedente, passava già) ...
     mock_gm = MagicMock()
     mock_gm.get_gadget_tails.return_value = [{'start': 0x3000, 'last_insn': make_insn(0x3004, "ret", "")}]
     mock_gm.reverse_graph = {
@@ -134,7 +133,6 @@ def test_rainbow_cycle_handling():
     assert len(gadgets) > 0
 
 def test_rainbow_pruning_darkness():
-    # ... (stesso codice del precedente, passava già) ...
     mock_gm = MagicMock()
     mock_gm.get_gadget_tails.return_value = [{'start': 0x4000, 'last_insn': make_insn(0x4000, "ret", "")}]
     mock_gm.reverse_graph = {
@@ -146,12 +144,20 @@ def test_rainbow_pruning_darkness():
     pass
 
 def test_scoring_priorities():
-    # ... (stesso codice del precedente, passava già) ...
     mock_gm = MagicMock()
+    mock_gm.profile = {
+        "link_reg": "ra",
+        "primary_arg_reg": "a0",
+        "trampoline_mnems": set(),
+        "ret_mnems": {"ret"}
+    }
+    
     finder = RainbowFinder(mock_gm, 5, 5)
     g1_insns = [make_insn(0x1000, "ld", "ra, 8(sp)"), make_insn(0x1004, "ret", "")]
     g2_insns = [make_insn(0x2000, "add", "a0, a1, a2"), make_insn(0x2004, "ret", "")]
     mock_gm.addr_to_node = {0x1000: {'insns': g1_insns}, 0x2000: {'insns': g2_insns}}
+    
     score1 = finder.score_gadget([0x1000])
     score2 = finder.score_gadget([0x2000])
+    
     assert score1 > score2
