@@ -1,5 +1,12 @@
 import collections
 
+def reg_in_op(reg_config, op_str):
+    if not reg_config:
+        return False
+    if isinstance(reg_config, str):
+        return reg_config in op_str
+    return any(r in op_str for r in reg_config)
+
 class RainbowFinder:
     def __init__(self, graph_manager, max_depth, max_darkness):
         self.gm = graph_manager
@@ -21,13 +28,6 @@ class RainbowFinder:
         a_reg = self.profile.get("primary_arg_reg")
         t_mnems = self.profile.get("trampoline_mnems", set())
         r_mnems = self.profile.get("ret_mnems", set())
-
-        def reg_in_op(reg_config, op_str):
-            if not reg_config:
-                return False
-            if isinstance(reg_config, str):
-                return reg_config in op_str
-            return any(r in op_str for r in reg_config)
 
         has_link_reg = any(reg_in_op(l_reg, i.op_str) for i in full_insns)
         has_arg_reg = any(reg_in_op(a_reg, i.op_str) for i in full_insns)
@@ -90,7 +90,7 @@ class RainbowFinder:
         elif mnem.startswith(self.profile["branch_prefixes"]):
             return "CONDITIONAL", "Jump-Based"
         else:
-            return "FALLTHROUGH", "Jump-Based"
+            return "FALLTHROUGH", "Sequential"
 
     def print_gadgets(self, limit, min_score, verbose):
         if verbose:
