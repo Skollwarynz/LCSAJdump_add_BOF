@@ -48,22 +48,25 @@ class RainbowFinder:
         print(f"\n[*] RainbowBFS config: Depth={self.MAX_DEPTH}, Darkness={self.MAX_DARKNESS}")
         tails = self.gm.get_gadget_tails()
         
-        queue = collections.deque([[t['start']] for t in tails])
+        # Queue format: (current_head, path_tuple, visited_set)
+        queue = collections.deque([ (t['start'], (t['start'],), {t['start']}) for t in tails ])
+        
         node_darkness = collections.defaultdict(int)
         pruned = 0
 
         while queue:
-            path = queue.popleft()
-            head = path[0]
+            head, path_tuple, visited = queue.popleft()
             
-            if len(path) >= 1: 
-                self.gadgets.append(path)
+            if len(path_tuple) >= 1: 
+                # Convert the tuple back to a list to maintain compatibility with the rest of your code
+                self.gadgets.append(list(path_tuple))
             
-            if len(path) >= self.MAX_DEPTH: 
+            if len(path_tuple) >= self.MAX_DEPTH: 
                 continue
 
             for parent in self.gm.reverse_graph.get(head, []):
-                if parent in path: 
+                # O(1) instantaneous lookup using the set
+                if parent in visited: 
                     continue
                 
                 if node_darkness[parent] >= self.MAX_DARKNESS:
@@ -71,7 +74,13 @@ class RainbowFinder:
                     continue
                 
                 node_darkness[parent] += 1
-                queue.append([parent] + path)
+                
+                # Efficiently create the new path tuple and update the visited set
+                new_path = (parent,) + path_tuple
+                new_visited = visited.copy()
+                new_visited.add(parent)
+                
+                queue.append((parent, new_path, new_visited))
         
         print(f"[*] Pruning: {pruned} pruned branches.")
         return self.gadgets

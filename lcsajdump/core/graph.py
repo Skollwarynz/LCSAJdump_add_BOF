@@ -4,8 +4,6 @@ from collections import defaultdict
 from .loader import draw_progress 
 from .config import ARCH_PROFILES
 
-RE_HEX = re.compile(r'0x[0-9a-fA-F]+')
-
 class LCSAJGraph:
     def __init__(self, instructions, arch="riscv64"):
         self.instructions = instructions 
@@ -87,12 +85,19 @@ class LCSAJGraph:
 
             # (Branch/Jump)
             if mnem in jump_mnems or mnem.startswith(branch_prefixes):
-                hex_match = RE_HEX.findall(last.op_str)
-                if hex_match:
-                    addr = int(hex_match[-1], 16)
-                    if addr in insn_map:
-                        target = insn_map[addr]
-                        rev_graph[target].append(start_addr)
+                op_str = last.op_str
+                idx = op_str.rfind('0x')
+                
+                if idx != -1:
+                    try:
+                        hex_str = op_str[idx:].split(']')[0].split(',')[0].strip()
+                        addr = int(hex_str, 16)
+                        
+                        if addr in insn_map:
+                            target = insn_map[addr]
+                            rev_graph[target].append(start_addr)
+                    except ValueError:
+                        pass
 
     def get_gadget_tails(self):
         ret_mnems = self.ret_mnems
