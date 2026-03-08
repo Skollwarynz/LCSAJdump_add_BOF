@@ -1,8 +1,10 @@
 import networkx as nx
-import re
+import regex as re
 from collections import defaultdict
 from .loader import draw_progress 
 from .config import ARCH_PROFILES
+
+HEX_PATTERN = re.compile(r'(0x[0-9a-fA-F]+)')
 
 class LCSAJGraph:
     def __init__(self, instructions, arch="riscv64"):
@@ -86,13 +88,12 @@ class LCSAJGraph:
             # (Branch/Jump)
             if mnem in jump_mnems or mnem.startswith(branch_prefixes):
                 op_str = last.op_str
-                idx = op_str.rfind('0x')
                 
-                if idx != -1:
+                match = HEX_PATTERN.search(op_str)
+                
+                if match:
                     try:
-                        hex_str = op_str[idx:].split(']')[0].split(',')[0].strip()
-                        addr = int(hex_str, 16)
-                        
+                        addr = int(match.group(1), 16)
                         if addr in insn_map:
                             target = insn_map[addr]
                             rev_graph[target].append(start_addr)

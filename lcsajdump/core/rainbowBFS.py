@@ -1,4 +1,6 @@
 import collections
+import sys
+import regex as re
 
 def reg_in_op(reg_config, op_str):
     if not reg_config:
@@ -8,6 +10,13 @@ def reg_in_op(reg_config, op_str):
     return any(r in op_str for r in reg_config)
 
 class RainbowFinder:
+    BASE_SCORE = 100
+    INSN_PENALTY_MULTIPLIER = 2
+    BONUS_LINK_REG = 50
+    BONUS_ARG_REG = 40
+    BONUS_TRAMPOLINE = 30
+    PENALTY_BAD_RET = 20
+
     def __init__(self, graph_manager, max_depth, max_darkness):
         self.gm = graph_manager
         self.gadgets = []
@@ -16,13 +25,13 @@ class RainbowFinder:
         self.profile = self.gm.profile 
 
     def score_gadget(self, path):
-        score = 100
+        score = self.BASE_SCORE
         full_insns = []
         for addr in path: 
             if addr in self.gm.addr_to_node:
                 full_insns.extend(self.gm.addr_to_node[addr]['insns'])
         
-        score -= (len(full_insns) * 2)
+        score -= (len(full_insns) * self.INSN_PENALTY_MULTIPLIER)
         
         l_reg = self.profile.get("link_reg")
         a_reg = self.profile.get("primary_arg_reg")
@@ -33,14 +42,14 @@ class RainbowFinder:
         has_arg_reg = any(reg_in_op(a_reg, i.op_str) for i in full_insns)
         has_J = any(i.mnemonic.lower() in t_mnems for i in full_insns)
 
-        if has_link_reg: score += 50
-        if has_arg_reg: score += 40
-        if has_J: score += 30
+        if has_link_reg: score += self.BONUS_LINK_REG
+        if has_arg_reg: score += self.BONUS_ARG_REG
+        if has_J: score += self.BONUS_TRAMPOLINE
 
         if full_insns:
             last = full_insns[-1]
             if last.mnemonic.lower() in r_mnems and not reg_in_op(l_reg, last.op_str):
-                 score -= 20
+                 score -= self.PENALTY_BAD_RET
 
         return score
 
@@ -100,10 +109,16 @@ class RainbowFinder:
             return "CONDITIONAL", "Jump-Based"
         else:
             return "FALLTHROUGH", "Sequential"
+        
+    def _safe_print(self, text, file=sys.stdout):
+        if file != sys.stdout:
+            ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+            text = ansi_escape.sub('', text)
+        print(text, file=file)
 
-    def print_gadgets(self, limit, min_score, verbose):
+    def print_gadgets(self, limit, min_score, verbose, out_file):
         if verbose:
-            print(f"\n[*] Verbose Mode: Showing all {len(self.gadgets)} gadgets individually...")
+            self._safe_print(f"\n[*] Verbose Mode: Showing all {len(self.gadgets)} gadgets individually...", file=out_file)
             categories = {'Sequential': [], 'Jump-Based': []}
 
             for g in self.gadgets:
@@ -118,17 +133,17 @@ class RainbowFinder:
                 gadgets = categories[cat_name]
                 gadgets.sort(key=lambda x: x[0], reverse=True)
                 
-                print(f"\033[33m\n{'='*60}\033[0m")
-                print(f"\033[33m--- TOP {limit} {cat_name.upper()} GADGETS (RAW VIEW) ---\033[0m")
-                print(f"\033[33m{'='*60}\033[0m")
+                self._safe_print(f"\033[33m\n{'='*60}\033[0m", file=out_file)
+                self._safe_print(f"\033[33m--- TOP {limit} {cat_name.upper()} GADGETS (RAW VIEW) ---\033[0m", file=out_file)
+                self._safe_print(f"\033[33m{'='*60}\033[0m", file=out_file)
                 
                 for i, (s, p, tag) in enumerate(gadgets[:limit]):
-                    print(f"\nRANK #{i+1} | SCORE: {s} | TYPE: {tag}")
+                    self._safe_print(f"\nRANK #{i+1} | SCORE: {s} | TYPE: {tag}", file=out_file)
                     for addr in p:
                         if addr in self.gm.addr_to_node:
                             node = self.gm.addr_to_node[addr]
                             for insn in node['insns']:
-                                    print(f"  \033[33m{hex(insn.address)}\033[0m: {insn.mnemonic} {insn.op_str}")
+                                    self._safe_print(f"  \033[33m{hex(insn.address)}\033[0m: {insn.mnemonic} {insn.op_str}", file=out_file)
 
         else:
             unique_gadgets = {'Sequential': {}, 'Jump-Based': {}}
@@ -165,9 +180,9 @@ class RainbowFinder:
                     reverse=True
                 )
                 
-                print(f"\033[33m\n{'='*80}\033[0m")
-                print(f"\033[33m--- TOP {limit} UNIQUE {cat_name.upper()} GADGETS ---\033[0m")
-                print(f"\033[33m{'='*80}\033[0m")
+                self._safe_print(f"\033[33m\n{'='*80}\033[0m", file=out_file)
+                self._safe_print(f"\033[33m--- TOP {limit} UNIQUE {cat_name.upper()} GADGETS ---\033[0m", file=out_file)
+                self._safe_print(f"\033[33m{'='*80}\033[0m", file=out_file)
                 
                 for i, (sig, data) in enumerate(sorted_gadgets[:limit]):
                     addrs = data['addresses']
@@ -175,8 +190,8 @@ class RainbowFinder:
                     
                     primary_addr = hex(addrs[0])
                     
-                    print(f"\033[33m{primary_addr}\033[0m: {sig}")
+                    self._safe_print(f"\033[33m{primary_addr}\033[0m: {sig}", file=out_file)
                     
                     if count > 1:
                         others = ", ".join([hex(a) for a in addrs[1:]])
-                        print(f"  \033[90mFound {count} times (at {others})\033[0m")
+                        self._safe_print(f"  \033[90mFound {count} times (at {others})\033[0m", file=out_file)

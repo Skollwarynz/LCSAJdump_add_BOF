@@ -45,19 +45,16 @@ def main(binary_path, depth, darkness, limit, min_score, verbose, file, arch):
     finder = RainbowFinder(gb, max_depth=depth, max_darkness=darkness)
     gadgets = finder.search()
     
-    finder.print_gadgets(limit=limit, min_score=min_score, verbose=verbose)
-    
     if file:
         output_file = "gadgets_found.txt"
         try:
             with open(output_file, "w") as f:
-                sys.stdout = f
-                finder.print_gadgets(limit=len(gadgets), min_score=min_score, verbose=verbose)
-                sys.stdout = sys.__stdout__ 
+                finder.print_gadgets(limit=len(gadgets), min_score=min_score, verbose=verbose, out_file=f)
             print(f"\n[+] Report saved in: {output_file}")
         except Exception as e:
-            sys.stdout = sys.__stdout__
-            print(f"[!] Errore while saving file: {e}")
+            print(f"[!] Error while saving file: {e}")
+    else:
+        finder.print_gadgets(limit=limit, min_score=min_score, verbose=verbose)
 
     print(f"(Found {len(gadgets)} gadgets)")
 
