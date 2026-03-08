@@ -93,15 +93,22 @@ python LCSAJdump.py -a riscv64 -d 15 -k 100 -l 20 --verbose <path_to_binary>
 
 ### CLI Options:
 
-[![LCSAJdump Demo_Help](https://asciinema.org/a/nn9IimXht3nl3ozj.svg)](https://asciinema.org/a/nn9IimXht3nl3ozj)
+[![LCSAJdump Help Demo](https://asciinema.org/a/fC37Fuprs5FHvOKi.svg)](https://asciinema.org/a/fC37Fuprs5FHvOKi)
 
 ---
 
-## Output Example
+## Output Examples
 
-https://asciinema.org/a/n1UDtLoqeX3paHt7
+Below are the benchmarks running the maximum depth (`-d 25`) and pruning darkness (`-k 10`) on `libc.so.6` for all natively supported architectures:
 
-[![LCSAJdump Demo](https://asciinema.org/a/n1UDtLoqeX3paHt7.svg)](https://asciinema.org/a/n1UDtLoqeX3paHt7)
+**1. x86_64 Analysis**
+[![LCSAJdump x86-64 Demo](https://asciinema.org/a/fi7HWIwX9MlGCpod.svg)](https://asciinema.org/a/fi7HWIwX9MlGCpod)
+
+**2. ARM64 Analysis**
+[![LCSAJdump ARM64 Demo](https://asciinema.org/a/Ylbm8fxaRPaV496A.svg)](https://asciinema.org/a/Ylbm8fxaRPaV496A) 
+
+**3. RISC-V (64-bit) Analysis**
+[![LCSAJdump RISC-V Demo](https://asciinema.org/a/bCrwbGaUnxuUMAiy.svg)](https://asciinema.org/a/bCrwbGaUnxuUMAiy)
 
 ---
 
