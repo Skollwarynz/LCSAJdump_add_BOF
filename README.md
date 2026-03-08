@@ -32,11 +32,11 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 
 ## Key Features
 
-* **Multi-Architecture Support:** Native support for RISC-V (64GC) and x86-64 (beta), easily extendable to ARM, and MIPS via modular profiles.
+* **Multi-Architecture Support:** Native support for RISC-V (64GC), x86-64, and ARM64, easily extendable to other architectures via modular profiles.
 * **Graph-Based Analysis:** Segments the `.text` section into LCSAJ basic blocks and reconstructs flow relationships using `NetworkX`.
-* **Rainbow BFS Algorithm:** proprietary backward Breadth-First Search starting from control-flow sinks to reconstruct valid execution paths.
-* **Heuristic Scoring:** Ranking system that prioritizes gadgets manipulating critical registers.
-* **Pruning Parameters:** Configurable "Darkness" factor to balance analysis depth and performance, preventing infinite loops in cyclic graphs and allowing personalized experience.
+* **Rainbow BFS Algorithm:** Proprietary backward Breadth-First Search starting from control-flow sinks. Now features an **O(1) Early-Drop Uniqueness Filter** and **Hard-Cap Instruction Limits** to prevent state explosion and ensure ultra-fast analysis even on dense CISC binaries.
+* **Architecture-Specific Heuristic Scoring:** Dynamic ranking system that evaluates gadgets based on architecture-specific traits (e.g., heavy length penalties for x86_64/ARM, dynamic bonuses for critical argument registers like `rdi` or `x0`).
+* **Pruning Parameters:** Configurable "Darkness" factor to balance analysis depth and performance, preventing infinite loops in cyclic graphs.
 
 ---
 
@@ -47,9 +47,9 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 LCSAJdump is designed to be universal. Currently supported:
 
 * **RISC-V 64-bit (RV64GC):** Full support for compressed 16-bit instructions.
-* **x86-64:** Handles variable-length overlapping instructions and misaligned gadgets.
-* **ARM:** Handles variable-length instructions and Thumb/Thumb-2 mixed-mode gadgets.
-* **Other Architectures:** Can be implemented by defining new profiles in `config.py`.
+* **x86-64:** Handles variable-length overlapping instructions. Safely navigates dense graphs without memory explosion.
+* **ARM64:** Handles 32-bit instructions and deeply filters out bloated gadgets via strict heuristic penalties.
+* **Other Architectures:** Can be easily implemented by defining new profiles in `config.py`.
 
 ---
 
