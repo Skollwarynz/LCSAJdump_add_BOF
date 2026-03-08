@@ -42,12 +42,13 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 
 ## Supported Architectures
 
+> (see [Benchmarks](https://chris1sflaggin.it/LCSAJdump#benchmarks)).
+
 LCSAJdump is designed to be universal. Currently supported:
 
 * **RISC-V 64-bit (RV64GC):** Full support for compressed 16-bit instructions.
-* **x86-64:** Beta support for variable-length instructions and 
-misaligned gadget discovery. Higher state explosion risk — lower depth/darkness 
-values recommended (see [Benchmarks](https://chris1sflaggin.it/LCSAJdump#benchmarks)).
+* **x86-64:** Handles variable-length overlapping instructions and misaligned gadgets.
+* **ARM:** Handles variable-length instructions and Thumb/Thumb-2 mixed-mode gadgets.
 * **Other Architectures:** Can be implemented by defining new profiles in `config.py`.
 
 ---
