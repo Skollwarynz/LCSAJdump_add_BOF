@@ -13,19 +13,19 @@ from .core.rainbowBFS import RainbowFinder
 @click.option('--arch', '-a', default='riscv64', help='Architecture of the binary (riscv64[default], x86_64, arm64).')
 @click.option('--verbose', '-v', is_flag=True, help='Verbose results for a better detailed result.')
 @click.option('--file', '-f', is_flag=True, help='Write found gadgets to a file "found_gadgets.txt".')
-@click.version_option(version='1.1.1', prog_name='LCSAJdump')
+@click.version_option(version='1.1.2', prog_name='LCSAJdump')
 def main(binary_path, depth, darkness, limit, min_score, verbose, file, arch):
     """
     LCSAJ ROP Finder.
     Analyze a binary to find ROP gadgets using Rainbow BFS algorithm.
     """
     print('\33[33m'+r"""
-        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██╗    ██╗
-        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║███║   ███║   ███║
-        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║╚██║   ╚██║   ╚██║
-        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║    ██║    ██║
-        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗ ██║██╗ ██║
-        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═╝╚═╝ ╚═╝
+        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██╗     ██████╗
+        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║███║   ███║    ╚════██╗
+        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║╚██║   ╚██║     █████╔╝
+        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║    ██║     ██╔═══╝
+        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗ ██║██╗ ███████╗
+        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═╝╚═╝ ╚══════╝
 
 
                                RISC-V                            ARM64                          x86-64 
@@ -54,7 +54,7 @@ def main(binary_path, depth, darkness, limit, min_score, verbose, file, arch):
         except Exception as e:
             print(f"[!] Error while saving file: {e}")
     else:
-        finder.print_gadgets(limit=limit, min_score=min_score, verbose=verbose)
+        finder.print_gadgets(limit=limit, min_score=min_score, verbose=verbose, out_file=sys.stdout)
 
     print(f"(Found {len(gadgets)} gadgets)")
 
