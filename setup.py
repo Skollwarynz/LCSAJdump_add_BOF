@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="lcsajdump",
-    version="1.1.1", 
+    version="1.1.2", 
     author="Chris1sFlaggin",
     author_email="lcsajdump@chris1sflaggin.it",
     description="A Graph-Based ROP Gadget Finder for RISC-V architectures",
@@ -36,6 +36,7 @@ setup(
         "pyelftools",
         "networkx",
         "click",
+        "regex",
     ],
     entry_points={
         'console_scripts': [
