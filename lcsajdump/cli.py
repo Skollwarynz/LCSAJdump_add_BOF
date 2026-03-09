@@ -3,10 +3,29 @@ import sys
 from .core.loader import BinaryLoader
 from .core.graph import LCSAJGraph
 from .core.rainbowBFS import RainbowFinder
+from elftools.elf.elffile import ELFFile
+
+def auto_detect_env(binary_path):
+    """Legge l'header ELF e deduce l'architettura."""
+    try:
+        with open(binary_path, 'rb') as f:
+            elf = ELFFile(f)
+            arch_str = elf.get_machine_arch()
+            
+            if arch_str in ['x64', 'EM_X86_64']:
+                return 'x86_64'
+            elif arch_str in ['AArch64', 'EM_AARCH64']:
+                return 'arm64'
+            elif arch_str in ['RISC-V', 'EM_RISCV']:
+                return 'riscv64'
+            else:
+                return 'riscv64' 
+    except Exception:
+        return 'riscv64'
 
 @click.command()
 @click.argument('binary_path', type=click.Path(exists=True))
-@click.option('--depth', '-d', default=30, help='Max search depth (LCSAJ blocks).')
+@click.option('--depth', '-d', default=20, help='Max search depth (LCSAJ blocks).')
 @click.option('--darkness', '-k', default=5, help='Pruning threshold (Max visits per node).')
 @click.option('--limit', '-l', default=10, help='Desired number of gadgets to show.')
 @click.option('--min-score', '-s', default=0, help='Min score for a gadget to be shown.')
@@ -35,7 +54,11 @@ def main(binary_path, depth, darkness, limit, min_score, verbose, file, arch):
     """+'\33[0m')
 
     print(f"[*] Analizing Target: {binary_path}")
-    
+
+    if arch is None or arch == "auto":
+        arch = auto_detect_env(binary_path)
+        print(f"[\033[32m+\033[0m] Auto-detected architecture: \033[1m{arch.upper()}\033[0m")
+
     loader = BinaryLoader(binary_path, arch)
     insns = loader.disassemble()
     
