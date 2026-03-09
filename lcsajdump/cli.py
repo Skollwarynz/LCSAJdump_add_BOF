@@ -53,7 +53,7 @@ def main(binary_path, depth, darkness, limit, min_score, verbose, file, arch):
         https://ko-fi.com/chris1sflaggin - Support the project!    |    https://chris1sflaggin.it/LCSAJdump/ - Official Website
     """+'\33[0m')
 
-    print(f"[*] Analizing Target: {binary_path}")
+    print(f"[*] Analyzing Target: {binary_path}")
 
     if arch is None or arch == "auto":
         arch = auto_detect_env(binary_path)
