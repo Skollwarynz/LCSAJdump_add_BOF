@@ -8,7 +8,7 @@ setup(
     version="1.1.2.1", 
     author="Chris1sFlaggin",
     author_email="lcsajdump@chris1sflaggin.it",
-    description="A Graph-Based ROP Gadget Finder for RISC-V architectures",
+    description="A Graph-Based ROP Gadget Finder for every architecture",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://chris1sflaggin.it/LCSAJdump/",
