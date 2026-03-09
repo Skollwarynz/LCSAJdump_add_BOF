@@ -1,6 +1,6 @@
 import collections
 import sys
-import regex as re
+import re
 
 def reg_in_op(reg_config, op_str):
     if not reg_config:

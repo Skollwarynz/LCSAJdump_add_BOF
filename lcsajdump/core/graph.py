@@ -1,5 +1,5 @@
 import networkx as nx
-import regex as re
+import re
 from collections import defaultdict
 from .loader import draw_progress 
 from .config import ARCH_PROFILES

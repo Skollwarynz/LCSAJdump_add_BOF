@@ -51,7 +51,7 @@ ARCH_PROFILES = {
     },
     "arm64": {
         "name": "ARM64 (AArch64)",
-        "cs_arch": capstone.CS_ARCH_AARCH64,
+        "cs_arch": capstone.CS_ARCH_ARM64,
         "cs_mode": capstone.CS_MODE_ARM,
         "step": 4,
         
