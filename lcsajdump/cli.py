@@ -29,7 +29,7 @@ def auto_detect_env(binary_path):
 @click.option('--darkness', '-k', default=5, help='Pruning threshold (Max visits per node).')
 @click.option('--limit', '-l', default=10, help='Desired number of gadgets to show.')
 @click.option('--min-score', '-s', default=0, help='Min score for a gadget to be shown.')
-@click.option('--arch', '-a', default='riscv64', help='Architecture of the binary (riscv64[default], x86_64, arm64).')
+@click.option('--arch', '-a', default='auto', help='Architecture of the binary (auto[default], riscv64, x86_64, arm64).')
 @click.option('--verbose', '-v', is_flag=True, help='Verbose results for a better detailed result.')
 @click.option('--file', '-f', is_flag=True, help='Write found gadgets to a file "found_gadgets.txt".')
 @click.version_option(version='1.1.2', prog_name='LCSAJdump')
