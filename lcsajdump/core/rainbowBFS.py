@@ -10,13 +10,13 @@ def reg_in_op(reg_config, op_str):
     return any(r in op_str for r in reg_config)
 
 class RainbowFinder:
-    MAX_INSNS = 15 
-    def __init__(self, graph_manager, max_depth, max_darkness):
+    def __init__(self, graph_manager, max_depth, max_darkness, max_insns):
         self.gm = graph_manager
         self.gadgets = []
         self.MAX_DEPTH = max_depth
         self.MAX_DARKNESS = max_darkness
         self.profile = self.gm.profile 
+        self.MAX_INSNS = max_insns 
         
         self.weights = self.profile.get("scoring_weights", {})
         self.base_score = self.weights.get("base_score", 100)
@@ -24,18 +24,18 @@ class RainbowFinder:
         
         self.l_reg = self.profile.get("link_reg")
         self.a_reg = self.profile.get("primary_arg_reg")
-        self.f_reg = self.profile.get("frame_reg") # NUOVO
+        self.f_reg = self.profile.get("frame_reg") 
         
         self.t_mnems = self.profile.get("trampoline_mnems", set())
         self.r_mnems = self.profile.get("ret_mnems", set())
-        self.c_mnems = self.profile.get("call_mnems", set()) # NUOVO
+        self.c_mnems = self.profile.get("call_mnems", set()) 
         
         self.bonus_link = self.weights.get("bonus_link_reg", 50)
         self.bonus_arg = self.weights.get("bonus_arg_reg", 40)
-        self.bonus_frame = self.weights.get("bonus_frame_reg", 30) # NUOVO
+        self.bonus_frame = self.weights.get("bonus_frame_reg", 30) 
         self.bonus_tramp = self.weights.get("bonus_trampoline", 30)
         self.penalty_ret = self.weights.get("penalty_bad_ret", 20)
-        self.penalty_call = self.weights.get("penalty_internal_call", 150) # NUOVO
+        self.penalty_call = self.weights.get("penalty_internal_call", 150) 
 
     def score_gadget(self, path):
         score = self.base_score
@@ -51,8 +51,6 @@ class RainbowFinder:
         has_frame_reg = any(reg_in_op(self.f_reg, i.op_str) for i in full_insns)
         has_J = any(i.mnemonic.lower() in self.t_mnems for i in full_insns)
         
-        # Penalizza pesantemente se trova una chiamata (jal, call) IN MEZZO al gadget.
-        # Escludiamo l'ultima istruzione [:-1] perché lì potrebbe esserci un jalr usato come ritorno!
         has_internal_call = any(i.mnemonic.lower() in self.c_mnems for i in full_insns[:-1])
 
         if has_link_reg: score += self.bonus_link

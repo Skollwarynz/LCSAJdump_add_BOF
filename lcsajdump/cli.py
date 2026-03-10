@@ -29,11 +29,12 @@ def auto_detect_env(binary_path):
 @click.option('--darkness', '-k', default=5, help='Pruning threshold (Max visits per node).')
 @click.option('--limit', '-l', default=10, help='Desired number of gadgets to show.')
 @click.option('--min-score', '-s', default=0, help='Min score for a gadget to be shown.')
+@click.option('--instructions', '-i', default=15, help='Max number of instructions contained in a single node')
 @click.option('--arch', '-a', default='auto', help='Architecture of the binary (auto[default], riscv64, x86_64, arm64).')
 @click.option('--verbose', '-v', is_flag=True, help='Verbose results for a better detailed result.')
 @click.option('--file', '-f', is_flag=True, help='Write found gadgets to a file "found_gadgets.txt".')
-@click.version_option(version='1.1.2', prog_name='LCSAJdump')
-def main(binary_path, depth, darkness, limit, min_score, verbose, file, arch):
+@click.version_option(version='1.1.2.2', prog_name='LCSAJdump')
+def main(binary_path, depth, darkness, limit, min_score, insns_no, verbose, file, arch):
     """
     LCSAJ ROP Finder.
     Analyze a binary to find ROP gadgets using Rainbow BFS algorithm.
@@ -65,7 +66,7 @@ def main(binary_path, depth, darkness, limit, min_score, verbose, file, arch):
     gb = LCSAJGraph(insns, arch)
     gb.build()
     
-    finder = RainbowFinder(gb, max_depth=depth, max_darkness=darkness)
+    finder = RainbowFinder(gb, max_depth=depth, max_darkness=darkness, max_insns=insns_no)
     gadgets = finder.search()
     
     if file:
