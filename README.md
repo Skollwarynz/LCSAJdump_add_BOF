@@ -13,7 +13,11 @@
 
 ---
 
-![LCSAJdump vs other gadget finders](https://chris1sflaggin.it/images/LCSAJdump1.mp4)
+<div align="center">
+  <video src="https://chris1sflaggin.it/images/LCSAJdump1.mp4" width="100%" autoplay loop muted playsinline>
+  </video>
+  <p><em>LCSAJdump vs other gadget finders</em></p>
+</div>
 
 **LCSAJdump** is a static analysis framework designed to discover Return-Oriented Programming (ROP) and Jump-Oriented Programming (JOP) gadgets. Unlike traditional scanners, LCSAJdump is **architecture-agnostic** and employs a graph-based approach to uncover vulnerabilities invisible to common linear tools.
 
