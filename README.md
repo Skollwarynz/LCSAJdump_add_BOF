@@ -14,9 +14,7 @@
 ---
 
 <div align="center">
-  <video src="https://raw.githubusercontent.com/chris1sflaggin/chris1sflaggin.github.io/main/images/LCSAJdump1.mp4" width="100%" autoplay loop muted playsinline>
-  </video>
-  <p><em>LCSAJdump: They parse text. We map reality.</em></p>
+  <img src="_images/LCSAJdump1.gif" width="100%">
 </div>
 
 **LCSAJdump** is a static analysis framework designed to discover Return-Oriented Programming (ROP) and Jump-Oriented Programming (JOP) gadgets. Unlike traditional scanners, LCSAJdump is **architecture-agnostic** and employs a graph-based approach to uncover vulnerabilities invisible to common linear tools.
