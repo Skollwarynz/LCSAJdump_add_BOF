@@ -18,6 +18,7 @@ class LCSAJGraph:
         self.unconditional_jumps = set(profile_data["unconditional_jumps"])
         self.ret_mnems = set(profile_data["ret_mnems"])
         self.branch_prefixes = profile_data["branch_prefixes"] 
+        self.trampoline_mnems = profile_data["trampoline_mnems"]
         
         self.nodes = []
         self.addr_to_node = {} 
@@ -102,4 +103,19 @@ class LCSAJGraph:
 
     def get_gadget_tails(self):
         ret_mnems = self.ret_mnems
-        return [n for n in self.nodes if n['last_insn'].mnemonic.lower() in ret_mnems]
+        uncond_jumps = self.unconditional_jumps
+        tails = []
+        
+        for n in self.nodes:
+            last_insn = n['last_insn']
+            mnem = last_insn.mnemonic.lower()
+            op_str = last_insn.op_str
+            
+            if mnem in ret_mnems:
+                tails.append(n)
+                
+            elif mnem in uncond_jumps and mnem in self.trampoline_mnems:
+                if not HEX_PATTERN.search(op_str):
+                    tails.append(n)
+                    
+        return tails

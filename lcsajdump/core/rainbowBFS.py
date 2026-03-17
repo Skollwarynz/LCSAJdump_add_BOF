@@ -134,17 +134,18 @@ class RainbowFinder:
         return self.gadgets
 
     def _classify_gadget(self, path):
-        if len(path) == 1:
-            return "LINEAR", "Sequential"
-        
-        first_node = self.gm.addr_to_node[path[0]]
-        last_insn = first_node['last_insn']
+        last_node = self.gm.addr_to_node[path[-1]]
+        last_insn = last_node['last_insn']
         mnem = last_insn.mnemonic.lower()
         
         if mnem in self.profile["unconditional_jumps"] and mnem not in self.profile["ret_mnems"]:
-            return "TRAMPOLINE", "Jump-Based"
+            return "JOP", "Jump-Based"
+        
         elif mnem.startswith(self.profile["branch_prefixes"]):
             return "CONDITIONAL", "Jump-Based"
+        
+        if len(path) == 1:
+            return "LINEAR", "Sequential"
         else:
             return "FALLTHROUGH", "Sequential"
         
@@ -168,14 +169,18 @@ class RainbowFinder:
                 categories[cat].append((s, g, tag)) 
 
             for cat_name in ['Sequential', 'Jump-Based']:
-                gadgets = categories[cat_name]
-                gadgets.sort(key=lambda x: x[0], reverse=True)
+                sorted_gadgets = sorted(categories[cat_name], key=lambda x: x['score'], reverse=True)
                 
-                self._safe_print(f"\033[33m\n{'='*60}\033[0m", file=out_file)
-                self._safe_print(f"\033[33m--- TOP {limit} {cat_name.upper()} GADGETS (RAW VIEW) ---\033[0m", file=out_file)
-                self._safe_print(f"\033[33m{'='*60}\033[0m", file=out_file)
+                actual_count = min(limit, len(sorted_gadgets))
                 
-                for i, (s, p, tag) in enumerate(gadgets[:limit]):
+                if actual_count == 0:
+                    continue
+                
+                self._safe_print(f"\033[33m\n{'='*80}\033[0m", file=out_file)
+                self._safe_print(f"\033[33m--- TOP {actual_count} UNIQUE {cat_name.upper()} GADGETS ---\033[0m", file=out_file)
+                self._safe_print(f"\033[33m{'='*80}\033[0m", file=out_file)
+                
+                for i, (s, p, tag) in enumerate(sorted_gadgets[:limit]):
                     self._safe_print(f"\nRANK #{i+1} | SCORE: {s} | TYPE: {tag}", file=out_file)
                     for addr in p:
                         if addr in self.gm.addr_to_node:
@@ -203,12 +208,20 @@ class RainbowFinder:
                 })
 
             for cat_name in ['Sequential', 'Jump-Based']:
+                # FIX: Ordina i dizionari usando la chiave 'score'
                 sorted_gadgets = sorted(categories[cat_name], key=lambda x: x['score'], reverse=True)
                 
+                # Calcola quanti gadget stampare realmente
+                actual_count = min(limit, len(sorted_gadgets))
+                
+                if actual_count == 0:
+                    continue
+                
                 self._safe_print(f"\033[33m\n{'='*80}\033[0m", file=out_file)
-                self._safe_print(f"\033[33m--- TOP {limit} UNIQUE {cat_name.upper()} GADGETS ---\033[0m", file=out_file)
+                self._safe_print(f"\033[33m--- TOP {actual_count} UNIQUE {cat_name.upper()} GADGETS ---\033[0m", file=out_file)
                 self._safe_print(f"\033[33m{'='*80}\033[0m", file=out_file)
                 
+                # Usa 'item' per estrarre i dati dai dizionari
                 for i, item in enumerate(sorted_gadgets[:limit]):
                     addrs = item['addresses']
                     count = len(addrs)
