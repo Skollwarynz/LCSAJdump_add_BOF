@@ -33,20 +33,20 @@ def auto_detect_env(binary_path):
 @click.option('--arch', '-a', default='auto', help='Architecture of the binary (auto[default], riscv64, x86_64, arm64).')
 @click.option('--verbose', '-v', is_flag=True, help='Verbose results for a better detailed result.')
 @click.option('--file', '-f', is_flag=True, help='Write found gadgets to a file "found_gadgets.txt".')
-@click.version_option(version='1.1.2.2', prog_name='LCSAJdump')
+@click.version_option(version='1.1.3', prog_name='LCSAJdump')
 def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, file, arch):
     """
     LCSAJ ROP Finder.
     Analyze a binary to find ROP gadgets using Rainbow BFS algorithm.
     """
     print('\33[33m'+r"""
-        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██╗     ██████╗
+        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗ ██╗    ██╗    ██████╗
         ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║███║   ███║    ╚════██╗
         ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║╚██║   ╚██║     █████╔╝
-        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║    ██║     ██╔═══╝
-        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗ ██║██╗ ███████╗
-        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═╝╚═╝ ╚══════╝
-
+        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝ ██║    ██║     ╚═══██╗
+        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝  ██║██╗ ██║██╗ ██████╔╝
+        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝   ╚═╝╚═╝ ╚═╝╚═╝ ╚═════╝
+        
 
                                RISC-V                            ARM64                          x86-64 
           
