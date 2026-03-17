@@ -208,10 +208,8 @@ class RainbowFinder:
                 })
 
             for cat_name in ['Sequential', 'Jump-Based']:
-                # FIX: Ordina i dizionari usando la chiave 'score'
                 sorted_gadgets = sorted(categories[cat_name], key=lambda x: x['score'], reverse=True)
                 
-                # Calcola quanti gadget stampare realmente
                 actual_count = min(limit, len(sorted_gadgets))
                 
                 if actual_count == 0:
@@ -221,7 +219,6 @@ class RainbowFinder:
                 self._safe_print(f"\033[33m--- TOP {actual_count} UNIQUE {cat_name.upper()} GADGETS ---\033[0m", file=out_file)
                 self._safe_print(f"\033[33m{'='*80}\033[0m", file=out_file)
                 
-                # Usa 'item' per estrarre i dati dai dizionari
                 for i, item in enumerate(sorted_gadgets[:limit]):
                     addrs = item['addresses']
                     count = len(addrs)
