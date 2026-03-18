@@ -59,7 +59,7 @@ ARCH_PROFILES = {
             "penalty_bad_ret": 0     
         }
     },
-    "arm64": {
+"arm64": {
         "name": "ARM64 (AArch64)",
         "cs_arch": ARM64_ARCH, 
         "cs_mode": capstone.CS_MODE_ARM,
@@ -67,7 +67,7 @@ ARCH_PROFILES = {
         
         "jump_mnems": {'b', 'bl', 'br', 'blr', 'ret', 'svc'},
         "unconditional_jumps": {'b', 'bl', 'br', 'blr', 'ret', 'svc'},
-        "ret_mnems": {'ret', 'br', 'blr', 'svc'},
+        "ret_mnems": {'ret', 'svc'}, 
         "branch_prefixes": ('b.', 'cbz', 'cbnz', 'tbz', 'tbnz'), 
         "call_mnems": {'bl', 'blr'},
         
