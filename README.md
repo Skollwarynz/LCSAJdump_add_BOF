@@ -138,21 +138,6 @@ lcsajdump --all-exec -d 25 -k 10 -l 30 <path_to_binary>
 
 ---
 
-## Output Examples
-
-Below are the benchmarks running the maximum depth (`-d 25`) and pruning darkness (`-k 10`) on `libc.so.6` for all natively supported architectures:
-
-**1. x86_64 Analysis**
-[![LCSAJdump x86-64 Demo](https://asciinema.org/a/QmySPgJEHbF3xDHN.svg)](https://asciinema.org/a/QmySPgJEHbF3xDHN)
-
-**2. ARM64 Analysis**
-[![LCSAJdump ARM64 Demo](https://asciinema.org/a/nZgq5kPHfLWzBq9R.svg)](https://asciinema.org/a/nZgq5kPHfLWzBq9R)
-
-**3. RISC-V (64-bit) Analysis**
-[![LCSAJdump RISC-V Demo](https://asciinema.org/a/TgFS9hlSdGn6FETZ.svg)](https://asciinema.org/a/TgFS9hlSdGn6FETZ)
-
----
-
 ## Contributing (Open for Forks!)
 
 The framework is open to new implementations. To add a new architecture:
