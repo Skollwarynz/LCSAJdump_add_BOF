@@ -59,14 +59,14 @@ def test_rainbow_search_depth():
     # Mock di un grafo con una catena di 3 nodi che finisce in ret
     # 0x1000 -> 0x2000 -> 0x3000 (ret)
     mock_gm = MagicMock()
-    mock_gm.get_gadget_tails.return_value = [{'start': 0x3000, 'last_insn': MagicMock(mnemonic="ret")}]
+    mock_gm.get_gadget_tails.return_value = [{'start': 0x3000, 'last_insn': MagicMock(mnemonic="ret"), 'insns': []}]
     mock_gm.reverse_graph = {0x3000: [0x2000], 0x2000: [0x1000]}
     mock_gm.addr_to_node = {
         0x1000: {'insns': []}, 0x2000: {'insns': []}, 0x3000: {'insns': []}
     }
     
     # Test con profondità massima 2
-    finder = RainbowFinder(mock_gm, max_depth=2, max_darkness=1)
+    finder = RainbowFinder(mock_gm, max_depth=2, max_darkness=1, max_insns=50)
     gadgets = finder.search()
     
     # Con depth 2, troverà solo percorsi di lunghezza 2 (es. [0x2000, 0x3000])
