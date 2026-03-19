@@ -89,16 +89,52 @@ python LCSAJdump.py <path_to_binary>
 
 ```
 
-**Advanced Analysis (Specifying Architecture):**
+**Advanced Analysis (Specifying Architecture and Output File):**
 
 ```bash
-python LCSAJdump.py -a riscv64 -d 15 -k 100 -l 20 --verbose <path_to_binary>
+lcsajdump -a riscv64 -d 15 -k 10 -l 20 -o gadgets.txt <path_to_binary>
+
+```
+
+**Export as JSON with bad-char filter:**
+
+```bash
+lcsajdump -a x86_64 -d 20 -k 5 -b "000a0d" --json -o gadgets.json <path_to_binary>
+
+```
+
+**Analyze all executable sections:**
+
+```bash
+lcsajdump --all-exec -d 25 -k 10 -l 30 <path_to_binary>
 
 ```
 
 ### CLI Options:
 
-[![LCSAJdump Help Demo](https://asciinema.org/a/fC37Fuprs5FHvOKi.svg)](https://asciinema.org/a/fC37Fuprs5FHvOKi)
+[![LCSAJdump Help Demo](https://asciinema.org/a/W9XWD7U5IgmEpbBY.svg)](https://asciinema.org/a/W9XWD7U5IgmEpbBY)
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `-a, --arch` | TEXT | `auto` | Target architecture (`auto`, `riscv64`, `x86_64`, `arm64`). Auto-detected from ELF header. |
+| `-d, --depth` | INTEGER | `20` | Max search depth in LCSAJ blocks. Controls chain length. |
+| `-k, --darkness` | INTEGER | `5` | Pruning threshold — max visits per node. Higher = more gadgets, slower scan. |
+| `-l, --limit` | INTEGER | `10` | Max number of gadgets to display in the output. |
+| `-s, --min-score` | INTEGER | `0` | Minimum heuristic score for a gadget to appear in results. |
+| `-i, --instructions` | INTEGER | `15` | Max number of instructions contained in a single LCSAJ node. |
+| `-v, --verbose` | FLAG | — | Enable verbose output for detailed per-gadget results. |
+| `-o, --output` | PATH | — | Write gadgets to the specified file path. |
+| `-b, --bad-chars` | TEXT | — | Hex bytes to filter from gadget addresses (e.g. `"000a0d"`). |
+| `--json` | FLAG | — | Output gadgets as structured JSON instead of plain text. |
+| `--all-exec` | FLAG | — | Analyze all executable sections, not just `.text`. |
+| `--version` | FLAG | — | Show the installed version and exit. |
+| `--help` | FLAG | — | Show help message and exit. |
+
+---
+
+## Demo (v1.2.0)
+
+[![LCSAJdump v1.2.0 Demo](https://asciinema.org/a/zvQlBuqv3UMQxZYU.svg)](https://asciinema.org/a/zvQlBuqv3UMQxZYU)
 
 ---
 
@@ -107,13 +143,13 @@ python LCSAJdump.py -a riscv64 -d 15 -k 100 -l 20 --verbose <path_to_binary>
 Below are the benchmarks running the maximum depth (`-d 25`) and pruning darkness (`-k 10`) on `libc.so.6` for all natively supported architectures:
 
 **1. x86_64 Analysis**
-[![LCSAJdump x86-64 Demo](https://asciinema.org/a/fi7HWIwX9MlGCpod.svg)](https://asciinema.org/a/fi7HWIwX9MlGCpod)
+[![LCSAJdump x86-64 Demo](https://asciinema.org/a/QmySPgJEHbF3xDHN.svg)](https://asciinema.org/a/QmySPgJEHbF3xDHN)
 
 **2. ARM64 Analysis**
-[![LCSAJdump ARM64 Demo](https://asciinema.org/a/Ylbm8fxaRPaV496A.svg)](https://asciinema.org/a/Ylbm8fxaRPaV496A) 
+[![LCSAJdump ARM64 Demo](https://asciinema.org/a/nZgq5kPHfLWzBq9R.svg)](https://asciinema.org/a/nZgq5kPHfLWzBq9R)
 
 **3. RISC-V (64-bit) Analysis**
-[![LCSAJdump RISC-V Demo](https://asciinema.org/a/bCrwbGaUnxuUMAiy.svg)](https://asciinema.org/a/bCrwbGaUnxuUMAiy)
+[![LCSAJdump RISC-V Demo](https://asciinema.org/a/TgFS9hlSdGn6FETZ.svg)](https://asciinema.org/a/TgFS9hlSdGn6FETZ)
 
 ---
 
