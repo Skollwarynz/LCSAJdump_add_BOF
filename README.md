@@ -110,9 +110,7 @@ lcsajdump --all-exec -d 25 -k 10 -l 30 <path_to_binary>
 
 ```
 
-### CLI Options:
-
-[![LCSAJdump Help Demo](https://asciinema.org/a/W9XWD7U5IgmEpbBY.svg)](https://asciinema.org/a/W9XWD7U5IgmEpbBY)
+### CLI Options
 
 | Flag | Type | Default | Description |
 |---|---|---|---|
@@ -129,12 +127,6 @@ lcsajdump --all-exec -d 25 -k 10 -l 30 <path_to_binary>
 | `--all-exec` | FLAG | — | Analyze all executable sections, not just `.text`. |
 | `--version` | FLAG | — | Show the installed version and exit. |
 | `--help` | FLAG | — | Show help message and exit. |
-
----
-
-## Demo (v1.2.0)
-
-[![LCSAJdump v1.2.0 Demo](https://asciinema.org/a/zvQlBuqv3UMQxZYU.svg)](https://asciinema.org/a/zvQlBuqv3UMQxZYU)
 
 ---
 
