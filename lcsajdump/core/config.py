@@ -22,13 +22,14 @@ ARCH_PROFILES = {
         
         "scoring_weights": {
             "base_score": 100,
-            "insn_penalty": 2,       
-            "bonus_link_reg": 50,    
+            "insn_penalty": 2,
+            "bonus_link_reg": 50,
             "bonus_arg_reg": 40,
             "bonus_frame_reg": 30,
             "penalty_internal_call": 150,
             "bonus_trampoline": 30,
-            "penalty_bad_ret": 20    
+            "penalty_bad_ret": 20,
+            "bonus_direct_call": 0
         }
     },
     "x86_64": {
@@ -50,13 +51,14 @@ ARCH_PROFILES = {
         
         "scoring_weights": {
             "base_score": 100,
-            "insn_penalty": 5,       
-            "bonus_link_reg": 30,    
+            "insn_penalty": 5,
+            "bonus_link_reg": 30,
             "bonus_arg_reg": 60,
             "bonus_frame_reg": 40,
             "penalty_internal_call": 200,
             "bonus_trampoline": 20,
-            "penalty_bad_ret": 0     
+            "penalty_bad_ret": 0,
+            "bonus_direct_call": 15
         }
     },
 "arm64": {
@@ -78,13 +80,14 @@ ARCH_PROFILES = {
         
         "scoring_weights": {
             "base_score": 100,
-            "insn_penalty": 12,   
+            "insn_penalty": 12,
             "bonus_link_reg": 50,
             "bonus_arg_reg": 60,
             "bonus_frame_reg": 30,
             "penalty_internal_call": 150,
             "bonus_trampoline": 20,
-            "penalty_bad_ret": 40
+            "penalty_bad_ret": 40,
+            "bonus_direct_call": 0
         }
     }
 }

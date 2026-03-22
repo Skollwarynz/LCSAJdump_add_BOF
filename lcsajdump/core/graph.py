@@ -104,18 +104,31 @@ class LCSAJGraph:
     def get_gadget_tails(self):
         ret_mnems = self.ret_mnems
         uncond_jumps = self.unconditional_jumps
+        call_mnems = self.profile.get("call_mnems", set())
+        insn_map = self.insn_to_block_start
         tails = []
-        
+
         for n in self.nodes:
             last_insn = n['last_insn']
             mnem = last_insn.mnemonic.lower()
             op_str = last_insn.op_str
-            
+
             if mnem in ret_mnems:
                 tails.append(n)
-                
+
             elif mnem in uncond_jumps and mnem in self.trampoline_mnems:
-                if not HEX_PATTERN.search(op_str):
+                hex_match = HEX_PATTERN.search(op_str)
+
+                if not hex_match:
                     tails.append(n)
-                    
+
+                elif mnem in call_mnems:
+                    try:
+                        target_addr = int(hex_match.group(1), 16)
+                        if target_addr in insn_map:
+                            n['direct_call_target'] = target_addr
+                            tails.append(n)
+                    except (ValueError, KeyError):
+                        pass
+
         return tails

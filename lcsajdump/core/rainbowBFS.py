@@ -37,6 +37,7 @@ class RainbowFinder:
         self.bonus_tramp = self.weights.get("bonus_trampoline", 30)
         self.penalty_ret = self.weights.get("penalty_bad_ret", 20)
         self.penalty_call = self.weights.get("penalty_internal_call", 150)
+        self.bonus_direct_call = self.weights.get("bonus_direct_call", 0)
 
     @staticmethod
     def _addr_contains_bad_bytes(addr, bad_bytes):
@@ -74,6 +75,11 @@ class RainbowFinder:
             last = full_insns[-1]
             if last.mnemonic.lower() in self.r_mnems and not reg_in_op(self.l_reg, last.op_str):
                  score -= self.penalty_ret
+
+        last_node = self.gm.addr_to_node.get(path[-1])
+        if last_node and 'direct_call_target' in last_node:
+            direct_call_bonus = self.bonus_direct_call
+            score += direct_call_bonus
 
         return score
 
