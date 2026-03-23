@@ -36,8 +36,9 @@ def auto_detect_env(binary_path):
 @click.option('--bad-chars', '-b', default='', help='Hex bytes to filter from gadget addresses (e.g. "000a0d").')
 @click.option('--json', 'json_output', is_flag=True, help='Output gadgets as structured JSON.')
 @click.option('--all-exec', is_flag=True, help='Analyze all executable sections, not just .text.')
+@click.option('--viz', 'viz_output', is_flag=True, help='Export full graph (nodes+edges+gadgets+comparison+animation) as JSON for 3D visualization.')
 @click.version_option(version='1.2.1', prog_name='LCSAJdump')
-def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, output, arch, bad_chars, json_output, all_exec):
+def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, output, arch, bad_chars, json_output, all_exec, viz_output):
     """
     LCSAJ ROP Finder.
     Analyze a binary to find ROP gadgets using Rainbow BFS algorithm.
@@ -99,6 +100,45 @@ def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, 
             summary = None
     else:
         summary = finder.print_gadgets(limit=limit, min_score=min_score, verbose=verbose, out_file=sys.stdout, bad_bytes=bad_bytes)
+
+    if viz_output:
+        from .core.exporter import export_graph_json
+        import os
+        viz_path = output if output else (os.path.splitext(os.path.basename(binary_path))[0] + "_lcsaj.json")
+
+        coverage_data = None
+        trace_data    = None
+        pmap_data     = None
+
+        from .core.tool_runner import compute_tool_coverage
+        print(f"\n[*] Computing multi-tool coverage...")
+        try:
+            coverage_data = compute_tool_coverage(gb, finder, binary_path, arch,
+                                                  run_real_tools=True)
+            sim = coverage_data.get("simulated", [])
+            if sim:
+                print(f"[\033[33m!\033[0m] Tools simulated (not installed): {', '.join(sim)}")
+            else:
+                print(f"[\033[32m+\033[0m] Real tool output used for coverage")
+        except Exception as e:
+            print(f"[\033[33m!\033[0m] Coverage computation failed: {e} — proceeding without")
+
+        from .core.trace_builder import build_animation_trace
+        print(f"[*] Building animation trace...")
+        try:
+            trace_data, pmap_data = build_animation_trace(gb, finder, coverage_data or {})
+            print(f"[\033[32m+\033[0m] Animation trace: {len(trace_data)} events")
+        except Exception as e:
+            print(f"[\033[33m!\033[0m] Animation trace failed: {e} — proceeding without")
+
+        try:
+            export_graph_json(binary_path, arch, loader, gb, finder, viz_path,
+                              coverage=coverage_data,
+                              trace=trace_data,
+                              phase_map=pmap_data)
+            print(f"\n[\033[32m+\033[0m] Graph JSON exported to: \033[1m{viz_path}\033[0m")
+        except Exception as e:
+            print(f"\n[!] Graph JSON export failed: {e}")
 
     if not json_output and summary:
         print(f"\nFound {summary['total']} gadgets. Showing {summary['shown_seq']} sequential + {summary['shown_jmp']} jump-based (use --limit N to show more).")
