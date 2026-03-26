@@ -9,9 +9,9 @@ ARCH_PROFILES = {
         "cs_mode": capstone.CS_MODE_RISCV64 | capstone.CS_MODE_RISCVC,
         "step": 2,
         
-        "jump_mnems": {'j', 'jal', 'c.j', 'c.jal', 'jr', 'jalr', 'c.jr', 'c.jalr', 'ret'},
-        "unconditional_jumps": {'j', 'jal', 'c.j', 'c.jal', 'ret', 'jr', 'c.jr', 'jalr', 'c.jalr'},
-        "ret_mnems": {'ret', 'c.jr', 'jr', 'jalr', 'c.jalr'},
+        "jump_mnems": {'j', 'jal', 'c.j', 'c.jal', 'jr', 'jalr', 'c.jr', 'c.jalr', 'ret', 'ecall'},
+        "unconditional_jumps": {'j', 'jal', 'c.j', 'c.jal', 'ret', 'jr', 'c.jr', 'jalr', 'c.jalr', 'ecall'},
+        "ret_mnems": {'ret', 'c.jr', 'jr', 'jalr', 'c.jalr', 'ecall'},
         "branch_prefixes": ('b', 'c.b'),
         "call_mnems": {'jal', 'c.jal', 'jalr', 'c.jalr'},
         
