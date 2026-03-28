@@ -36,7 +36,7 @@ def auto_detect_env(binary_path):
 @click.option('--bad-chars', '-b', default='', help='Hex bytes to filter from gadget addresses (e.g. "000a0d").')
 @click.option('--json', 'json_output', is_flag=True, help='Output gadgets as structured JSON.')
 @click.option('--all-exec', is_flag=True, help='Analyze all executable sections, not just .text.')
-@click.version_option(version='1.2.2', prog_name='LCSAJdump')
+@click.version_option(version='1.2.3.1', prog_name='LCSAJdump')
 def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, output, arch, bad_chars, json_output, all_exec):
     """
     LCSAJ ROP Finder.
