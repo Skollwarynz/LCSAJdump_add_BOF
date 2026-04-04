@@ -36,19 +36,20 @@ def auto_detect_env(binary_path):
 @click.option('--bad-chars', '-b', default='', help='Hex bytes to filter from gadget addresses (e.g. "000a0d").')
 @click.option('--json', 'json_output', is_flag=True, help='Output gadgets as structured JSON.')
 @click.option('--all-exec', is_flag=True, help='Analyze all executable sections, not just .text.')
-@click.version_option(version='1.2.3.1', prog_name='LCSAJdump')
-def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, output, arch, bad_chars, json_output, all_exec):
+@click.option('--old', is_flag=True, help='Use full graph build (old way) instead of the default lazy build (slower, higher memory usage).')
+@click.version_option(version='1.2.4', prog_name='LCSAJdump')
+def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, output, arch, bad_chars, json_output, all_exec, old):
     """
     LCSAJ ROP Finder.
     Analyze a binary to find ROP gadgets using Rainbow BFS algorithm.
     """
     print('\33[33m'+r"""
-        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗  ██╗   ██████╗    ██████╗ 
-        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║ ███║   ╚════██╗   ╚════██╗
-        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║ ╚██║    █████╔╝    █████╔╝
-        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝  ██║   ██╔═══╝     ╚═══██╗
-        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝   ██║██╗███████╗██╗██████╔╝
-        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝    ╚═╝╚═╝╚══════╝╚═╝╚═════╝ 
+        ██╗      ██████╗███████╗ █████╗      ██╗██████╗ ██╗   ██╗███╗   ███╗██████╗               ██╗   ██╗  ██╗   ██████╗    ██╗  ██╗
+        ██║     ██╔════╝██╔════╝██╔══██╗     ██║██╔══██╗██║   ██║████╗ ████║██╔══██╗              ██║   ██║ ███║   ╚════██╗   ██║  ██║
+        ██║     ██║     ███████╗███████║     ██║██║  ██║██║   ██║██╔████╔██║██████╔╝    █████╗    ██║   ██║ ╚██║    █████╔╝   ███████║
+        ██║     ██║     ╚════██║██╔══██║██   ██║██║  ██║██║   ██║██║╚██╔╝██║██╔═══╝     ╚════╝    ╚██╗ ██╔╝  ██║   ██╔═══╝    ╚════██║
+        ███████╗╚██████╗███████║██║  ██║╚█████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║██║                    ╚████╔╝   ██║██╗███████╗██╗     ██║
+        ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝                     ╚═══╝    ╚═╝╚═╝╚══════╝╚═╝     ╚═╝ 
 
 
                                RISC-V                            ARM64                          x86-64
@@ -71,7 +72,11 @@ def main(binary_path, depth, darkness, limit, min_score, instructions, verbose, 
     insns = loader.disassemble()
 
     gb = LCSAJGraph(insns, arch)
-    gb.build()
+    if old:
+        print(f"[\033[33m~\033[0m] Using legacy full graph build (--old)")
+        gb.build()
+    else:
+        gb.build_lazy(max_depth=depth)
 
     finder = RainbowFinder(gb, max_depth=depth, max_darkness=darkness, max_insns=instructions)
     gadgets = finder.search()

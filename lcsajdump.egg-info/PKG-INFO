@@ -1,3 +1,34 @@
+Metadata-Version: 2.4
+Name: lcsajdump
+Version: 1.2.3.1
+Summary: A Graph-Based ROP Gadget Finder for every architecture
+Home-page: https://chris1sflaggin.it/LCSAJdump/
+Author: Chris1sFlaggin
+Author-email: lcsajdump@chris1sflaggin.it
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Security
+Classifier: Environment :: Console
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: capstone
+Requires-Dist: pyelftools
+Requires-Dist: networkx
+Requires-Dist: click
+Requires-Dist: regex
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
 <div align="center">
 
 <a href='https://chris1sflaggin.it/LCSAJdump'><img src="_images/LOGO.png" width="60%" alt="LCSAJdump Logo"/></a>
