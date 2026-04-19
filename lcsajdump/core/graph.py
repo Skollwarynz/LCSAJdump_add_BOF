@@ -113,7 +113,11 @@ class LCSAJGraph:
         self.nodes = [n for n in self.nodes if n['start'] in reachable]
 
     def _find_tail_starts(self) -> set:
-        """Return block-start addresses that contain a gadget-tail instruction."""
+        """Return block-start addresses that contain a gadget-tail instruction.
+
+        Tails: ret_mnems, indirect unconditional trampolines, and direct-call trampolines
+        whose target is inside insn_map. Does not require reverse_graph.
+        """
         ret_mnems = self.ret_mnems
         uncond_jumps = self.unconditional_jumps
         call_mnems = self.profile.get("call_mnems", set())
@@ -141,7 +145,11 @@ class LCSAJGraph:
         return tails
 
     def _bfs_reachable_from_tails(self, tail_starts: set, max_depth: int) -> set:
-        """BFS backwards from tail block-starts, returns reachable block-start addresses."""
+        """BFS backwards from tail block-starts through the raw block graph.
+
+        Builds a lightweight predecessor map on-the-fly (not stored) and walks backwards
+        up to max_depth hops. Returns the set of reachable block-start addresses.
+        """
         insn_map = self.insn_to_block_start
         uncond_jumps = self.unconditional_jumps
         jump_mnems = self.jump_mnems

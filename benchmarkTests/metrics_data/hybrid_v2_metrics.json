@@ -1,0 +1,155 @@
+{
+  "test_metrics": {
+    "model": "Hybrid v2 (31f, HNM+Optuna)",
+    "n_samples": 492,
+    "NDCG@5": 0.8206993971175915,
+    "Recall@5": 0.3545177045177045,
+    "NDCG@10": 0.9352374489463569,
+    "Recall@10": 0.5112942612942613,
+    "NDCG@20": 1.0,
+    "Recall@20": 0.1562881562881563,
+    "arch_breakdown": {
+      "arm64": {
+        "NDCG@5": 1.0,
+        "NDCG@10": 1.0,
+        "NDCG@20": 1.0
+      },
+      "x86_32": {
+        "NDCG@5": 1.0,
+        "NDCG@10": 1.0,
+        "NDCG@20": 1.0
+      },
+      "x86_64": {
+        "NDCG@5": 0.7011656618626527,
+        "NDCG@10": 0.8704748978927137,
+        "NDCG@20": 0.0
+      }
+    }
+  },
+  "best_params": {
+    "n_estimators": 168,
+    "num_leaves": 79,
+    "learning_rate": 0.010658308515747726,
+    "min_child_samples": 22,
+    "feature_fraction": 0.7020843771180812,
+    "bagging_fraction": 0.9192935333529578,
+    "bagging_freq": 7,
+    "lambda_l1": 0.00011431541785080464,
+    "lambda_l2": 0.005914820294042947
+  },
+  "cv_ndcg10": 0.9875685035372225,
+  "hard_mining": {
+    "total": 3130,
+    "hard_negatives": 0,
+    "hard_positives": 112,
+    "hard_total": 112,
+    "heur_threshold": 189.0,
+    "pred_q75": 0.04864081831562735,
+    "pred_q25": -0.05290128612279791,
+    "hard_weight": 3.0
+  },
+  "feature_names": [
+    "insn_count",
+    "clobber_count",
+    "stack_slots",
+    "frame_size_bytes",
+    "has_stack_load",
+    "has_mem_read",
+    "has_mem_write",
+    "is_ret_terminated",
+    "is_indirect_jmp_terminated",
+    "is_trampoline_term",
+    "is_internal_call",
+    "has_direct_call",
+    "is_chained",
+    "hits_link_reg",
+    "hits_arg_reg",
+    "hits_frame_reg",
+    "is_pivot_gadget",
+    "is_sequential",
+    "addr_has_null",
+    "addr_has_newline",
+    "heuristic_score",
+    "arch_x86_64",
+    "arch_arm64",
+    "arch_riscv64",
+    "arch_x86_32",
+    "majority_term_is_ret",
+    "sm_controls_arg_reg",
+    "sm_stack_pivot_size",
+    "sm_writes_memory",
+    "sm_dereferences_memory",
+    "sm_clobbers_base_pointer"
+  ],
+  "n_features": 31,
+  "n_semantic": 5,
+  "semantic_feats": [
+    "sm_controls_arg_reg",
+    "sm_stack_pivot_size",
+    "sm_writes_memory",
+    "sm_dereferences_memory",
+    "sm_clobbers_base_pointer"
+  ],
+  "top_importance": [
+    {
+      "feat": "hits_link_reg",
+      "gain": 2418.050188302994
+    },
+    {
+      "feat": "insn_count",
+      "gain": 1214.8314906084997
+    },
+    {
+      "feat": "heuristic_score",
+      "gain": 1129.2966982226162
+    },
+    {
+      "feat": "is_ret_terminated",
+      "gain": 767.2977089509368
+    },
+    {
+      "feat": "sm_dereferences_memory",
+      "gain": 576.9702267609537
+    },
+    {
+      "feat": "clobber_count",
+      "gain": 338.046030622354
+    },
+    {
+      "feat": "sm_stack_pivot_size",
+      "gain": 157.53439667390194
+    },
+    {
+      "feat": "is_trampoline_term",
+      "gain": 100.80275783734396
+    },
+    {
+      "feat": "has_direct_call",
+      "gain": 74.3967170662363
+    },
+    {
+      "feat": "stack_slots",
+      "gain": 54.7697182839911
+    },
+    {
+      "feat": "sm_writes_memory",
+      "gain": 51.35260406136513
+    },
+    {
+      "feat": "hits_arg_reg",
+      "gain": 50.73961691666045
+    },
+    {
+      "feat": "has_mem_write",
+      "gain": 45.34015602059662
+    },
+    {
+      "feat": "is_sequential",
+      "gain": 30.132070302963257
+    },
+    {
+      "feat": "is_indirect_jmp_terminated",
+      "gain": 22.259585636667907
+    }
+  ]
+}

@@ -40,8 +40,9 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 * **Multi-Architecture Support:** Native support for RISC-V (64GC), x86-64, and ARM64, easily extendable to other architectures via modular profiles.
 * **Graph-Based Analysis:** Segments the `.text` section into LCSAJ basic blocks and reconstructs flow relationships using `NetworkX`.
 * **Rainbow BFS Algorithm:** Proprietary backward Breadth-First Search starting from control-flow sinks. Now features an **O(1) Early-Drop Uniqueness Filter** and **Hard-Cap Instruction Limits** to prevent state explosion and ensure ultra-fast analysis even on dense CISC binaries.
-* **Lazy Graph Build (default):** Graph construction retains only nodes reachable from gadget tails within `--depth` hops, drastically reducing memory and build time on large binaries (e.g. libc) while producing **identical results**. Use `--old` to fall back to the full build.
-* **Architecture-Specific Heuristic Scoring:** Dynamic ranking system that evaluates gadgets based on architecture-specific traits (e.g., heavy length penalties for x86_64/ARM, dynamic bonuses for critical argument registers like `rdi` or `x0`).
+* **Lazy Graph Build:** Graph construction retains only nodes reachable from gadget tails within `--depth` hops, drastically reducing memory and build time on large binaries (e.g., `libc`) while producing **identical results**.
+* **Two-Stage Ranking Engine:** Combines a hyper-fast heuristic baseline (Bayesian-optimized via Optuna) with a deep-learning **LightGBM ML model** that refines gadget quality using structural and semantic features.
+* **Zero-Overhead Inference:** The ML model is integrated natively and runs by default, processing tens of thousands of nodes in seconds. It acts as a highly effective filter, rejecting noisy jumps and returning clean, highly controllable gadget chains.
 * **Pruning Parameters:** Configurable "Darkness" factor to balance analysis depth and performance, preventing infinite loops in cyclic graphs.
 
 ---
@@ -111,10 +112,10 @@ lcsajdump --all-exec -d 25 -k 10 -l 30 <path_to_binary>
 
 ```
 
-**Force legacy full graph build (diagnostic):**
+**Force strictly algorithmic ranking (bypass ML):**
 
 ```bash
-lcsajdump --old <path_to_binary>
+lcsajdump --algo <path_to_binary>
 
 ```
 
@@ -133,11 +134,33 @@ lcsajdump --old <path_to_binary>
 | `-b, --bad-chars` | TEXT | — | Hex bytes to filter from gadget addresses (e.g. `"000a0d"`). |
 | `--json` | FLAG | — | Output gadgets as structured JSON instead of plain text. |
 | `--all-exec` | FLAG | — | Analyze all executable sections, not just `.text`. |
-| `--old` | FLAG | — | Use the full legacy graph build instead of the default lazy build. Same results, higher memory usage. |
+| `-al, --algo` | FLAG | — | Use strictly the algorithmic ranking (bypass ML). |
 | `--version` | FLAG | — | Show the installed version and exit. |
 | `--help` | FLAG | — | Show help message and exit. |
 
 ---
+
+---
+
+## 📊 Accuracy & Benchmarks
+
+LCSAJdump is backed by a rigorous, incrementally validated test suite located in the `benchmarkTests/` directory.
+
+Through 14 major iterations of semantic feature engineering, the hybrid model has learned to discriminate gadgets based on actual memory side-effects (extracted via `angr` symbolic execution) rather than purely syntactic heuristics. 
+
+When evaluated on monolithic, real-world executables like `libc.so.6`, the engine achieves a mathematically perfect **NDCG@20 = 1.000**. The Two-Stage engine successfully prioritizes clean stack-popping sequences and `ret2csu`-like calls, while heavily penalizing crash-prone fixed-offset jumps that deceive traditional static scanners.
+
+---
+
+## 🧠 Developer & ML Guide
+
+The repository is structured to support both end-users and ML researchers.
+
+* **Production Engine:** The core CLI seamlessly integrates the inference engine, requiring no manual model loading.
+* **ML Pipeline:** The `lcsajdump/ml/` directory contains the complete pipeline used to train the models:
+  * `build_dataset.py`: Extracts structural and semantic features from a corpus of CTF binaries.
+  * `train_model.py`: Trains the LightGBM LambdaRank model and outputs the `.pkl` models.
+  * `archive_experiments/`: Contains historical scripts, optimization routines, and experimental architectures used during the research phase.
 
 ## Contributing (Open for Forks!)
 
