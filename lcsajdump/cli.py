@@ -193,7 +193,7 @@ def main(
             ]
             for d in search_dirs:
                 candidates = sorted(
-                    _glob.glob(_os.path.join(d, "gadget_model*.pkl")),
+                    _glob.glob(_os.path.join(d, "*.pkl")),
                     reverse=True,
                 )
                 if candidates:
