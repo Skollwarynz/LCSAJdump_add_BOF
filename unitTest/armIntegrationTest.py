@@ -24,6 +24,6 @@ def test_arm64_tail_discovery():
     tails = graph.get_gadget_tails()
     assert len(tails) == 2
     
-    finder = RainbowFinder(graph, max_depth=5, max_darkness=1)
+    finder = RainbowFinder(graph, max_depth=5, max_darkness=1, max_insns=15)
     gadgets = finder.search()
     assert len(gadgets) > 0

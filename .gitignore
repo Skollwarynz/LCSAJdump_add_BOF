@@ -10,7 +10,3 @@ tesi
 *.log
 output_*.txt
 *.csv
-
-# ML Models (runtime artifacts)
-*.pkl
-

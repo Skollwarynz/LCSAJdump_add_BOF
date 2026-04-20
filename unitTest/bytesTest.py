@@ -39,7 +39,7 @@ def test_find_exploit_gadget_logic():
     graph.build()
     
     # 3. Search
-    finder = RainbowFinder(graph, max_depth=5, max_darkness=1)
+    finder = RainbowFinder(graph, max_depth=5, max_darkness=1, max_insns=15)
     gadgets = finder.search()
     
     # 4. Verifica: Dobbiamo trovare un gadget che inizia a 0x4618c
