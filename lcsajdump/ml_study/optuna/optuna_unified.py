@@ -7,8 +7,8 @@ Ottimizza contemporaneamente:
 
 Usage
 -----
-python -m lcsajdump_dbg.ml.optuna_unified \
-    --csv lcsajdump_dbg/ml/datasets/gadget_dataset_v9.csv \
+python -m lcsajdump.ml.optuna_unified \
+    --csv lcsajdump/ml/datasets/gadget_dataset_v9.csv \
     --arch x86_64 \
     --trials 200 \
     --out /tmp/unified_weights.json
@@ -262,4 +262,4 @@ if __name__ == "__main__":
     with open(args.out, "w") as f:
         json.dump(results, f, indent=2)
     print(f"\n[unified] Saved to {args.out}")
-    print("[unified] Apply these manually to lcsajdump_dbg/core/config.py")
+    print("[unified] Apply these manually to lcsajdump/core/config.py")

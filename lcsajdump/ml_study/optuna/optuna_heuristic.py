@@ -9,14 +9,14 @@ heuristic formula itself on the labelled dataset.
 
 Usage
 -----
-    python -m lcsajdump_dbg.ml.optuna_heuristic \\
+    python -m lcsajdump.ml.optuna_heuristic \\
         --csv /tmp/gadget_dataset_v3.csv \\
         --arch x86_64 \\
         --trials 100 \\
         --out /tmp/heuristic_weights_x86_64.json
 
     # Or tune all three architectures:
-    python -m lcsajdump_dbg.ml.optuna_heuristic \\
+    python -m lcsajdump.ml.optuna_heuristic \\
         --csv /tmp/gadget_dataset_v3.csv \\
         --trials 100
 """
@@ -184,4 +184,4 @@ if __name__ == '__main__':
     with open(args.out, 'w') as f:
         json.dump(results, f, indent=2)
     print(f"\n[heuristic] Saved to {args.out}")
-    print("[heuristic] Apply these manually to lcsajdump_dbg/core/config.py")
+    print("[heuristic] Apply these manually to lcsajdump/core/config.py")

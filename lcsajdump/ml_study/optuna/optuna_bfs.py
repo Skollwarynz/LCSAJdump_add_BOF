@@ -7,9 +7,9 @@ di exploit annotati.
 
 Usage
 -----
-    python -m lcsajdump_dbg.ml.optuna_bfs --arch x86_64 --trials 100
-    python -m lcsajdump_dbg.ml.optuna_bfs --arch arm64 --trials 100 --jobs 4
-    python -m lcsajdump_dbg.ml.optuna_bfs --arch riscv64 --out /tmp/bfs_riscv64.json
+    python -m lcsajdump.ml.optuna_bfs --arch x86_64 --trials 100
+    python -m lcsajdump.ml.optuna_bfs --arch arm64 --trials 100 --jobs 4
+    python -m lcsajdump.ml.optuna_bfs --arch riscv64 --out /tmp/bfs_riscv64.json
 """
 import argparse
 import json
@@ -25,7 +25,7 @@ except ImportError:
     print("Mancano le dipendenze: pip install optuna scikit-learn", file=sys.stderr)
     sys.exit(1)
 
-from lcsajdump_dbg.ml.dataset_builder import (
+from lcsajdump.ml.dataset_builder import (
     ALL_SAMPLES,
     extract_gadget_addresses,
     _matches_any_pattern,

@@ -6,7 +6,7 @@ mean NDCG@5 on a group-aware hold-out split.
 
 Usage
 -----
-    python -m lcsajdump_dbg.ml.optuna_search \\
+    python -m lcsajdump.ml.optuna_search \\
         --csv /tmp/gadget_dataset_v3.csv \\
         --trials 80 \\
         --out /tmp/optuna_results.json \\
@@ -31,8 +31,8 @@ except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
     sys.exit(1)
 
-from lcsajdump_dbg.ml.features import FEATURE_NAMES
-from lcsajdump_dbg.ml.trainer import _fix_degenerate_groups, _rebuild_groups, DEFAULT_PARAMS
+from lcsajdump.ml.features import FEATURE_NAMES
+from lcsajdump.ml.trainer import _fix_degenerate_groups, _rebuild_groups, DEFAULT_PARAMS
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
