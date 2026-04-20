@@ -3,6 +3,7 @@ include LICENSE
 include requirements.txt
 
 graft lcsajdump
+graft lcsajdump/ml/models
 
 prune testCTFs
 prune unitTest
@@ -19,3 +20,6 @@ global-exclude *.so
 global-exclude .DS_Store
 global-exclude gadgets_found.txt  
 global-exclude PAPER.md           
+
+# Escludiamo il materiale di ricerca e i dataset dal pacchetto di produzione
+prune lcsajdump/ml_study
