@@ -42,7 +42,7 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 * **Rainbow BFS Algorithm:** Proprietary backward Breadth-First Search starting from control-flow sinks. Now features an **O(1) Early-Drop Uniqueness Filter** and **Hard-Cap Instruction Limits** to prevent state explosion and ensure ultra-fast analysis even on dense CISC binaries.
 * **Lazy Graph Build:** Graph construction retains only nodes reachable from gadget tails within `--depth` hops, drastically reducing memory and build time on large binaries (e.g., `libc`) while producing **identical results**.
 * **Two-Stage Ranking Engine:** Combines a hyper-fast heuristic baseline (Bayesian-optimized via Optuna) with a deep-learning **LightGBM ML model** that refines gadget quality using structural and semantic features.
-* **Zero-Overhead Inference:** The ML model is integrated natively and runs by default, processing tens of thousands of nodes in seconds. It acts as a highly effective filter, rejecting noisy jumps and returning clean, highly controllable gadget chains. Hosted on [Hugging Face](https://huggingface.co/chris1sflaggin/chainfinder_v4_hybrid). Hosted on [Hugging Face](https://huggingface.co/chris1sflaggin/chainfinder_v4_hybrid).
+* **Zero-Overhead Inference:** The ML model is integrated natively and runs by default, processing tens of thousands of nodes in seconds. It acts as a highly effective filter, rejecting noisy jumps and returning clean, highly controllable gadget chains. Hosted on [Hugging Face](https://huggingface.co/chris1sflaggin/chainfinder_v4_hybrid).
 * **Pruning Parameters:** Configurable "Darkness" factor to balance analysis depth and performance, preventing infinite loops in cyclic graphs.
 
 ---
