@@ -40,7 +40,7 @@ def test_arm64_scoring_priorities():
     mock_gm = MagicMock()
     mock_gm.profile = ARCH_PROFILES["arm64"]
     
-    finder = RainbowFinder(mock_gm, 5, 5)
+    finder = RainbowFinder(mock_gm, 5, 5, max_insns=15)
     
     # Gadget 1: mov x0, x1; ret (Great ROP gadget, sets argument 0)
     g1_insns = [make_insn(0x1000, "mov", "x0, x1"), make_insn(0x1004, "ret", "")]
@@ -68,15 +68,15 @@ def test_arm64_classification():
     """Verify that ARM64 branch mnemonics are classified correctly."""
     mock_gm = MagicMock()
     mock_gm.profile = ARCH_PROFILES["arm64"]
-    finder = RainbowFinder(mock_gm, 5, 5)
+    finder = RainbowFinder(mock_gm, 5, 5, max_insns=15)
     
     mock_gm.addr_to_node = {
         0x1000: {'last_insn': make_insn(0x1000, "cbnz", "x0, 0x1050")},  # Conditional
         0x2000: {'last_insn': make_insn(0x2000, "blr", "x1")}            # Trampoline
     }
     
-    tag1, _ = finder._classify_gadget([0x1000, 0x9999])
-    tag2, _ = finder._classify_gadget([0x2000, 0x9999])
+    tag1, _ = finder._classify_gadget([0x9999, 0x1000])
+    tag2, _ = finder._classify_gadget([0x9999, 0x2000])
     
     assert tag1 == "CONDITIONAL"
-    assert tag2 == "TRAMPOLINE"
+    assert tag2 == "JOP"

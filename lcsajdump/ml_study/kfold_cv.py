@@ -6,7 +6,7 @@ both train and val).  Reports NDCG@1/3/5/10 per fold and averaged.
 
 Usage
 -----
-    python -m lcsajdump_dbg.ml.kfold_cv \\
+    python -m lcsajdump.ml.kfold_cv \\
         --csv /tmp/gadget_dataset_v3.csv \\
         --k 5 \\
         --out /tmp/kfold_results.json
@@ -29,8 +29,8 @@ except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
     sys.exit(1)
 
-from lcsajdump_dbg.ml.features import FEATURE_NAMES
-from lcsajdump_dbg.ml.trainer import (
+from lcsajdump.ml.features import FEATURE_NAMES
+from lcsajdump.ml_study.train_model import (
     DEFAULT_PARAMS,
     _fix_degenerate_groups,
     _cap_group_sizes,
@@ -177,6 +177,7 @@ if __name__ == "__main__":
     df = pd.read_csv(args.csv)
     for col in FEATURE_NAMES:
         if col not in df.columns:
+            print(f"[Warning] Manca la feature {col} nel CSV! Faccio padding con 0, ma dovresti ricreare il dataset.", file=sys.stderr)
             df[col] = 0
     results = run_kfold(df, k=args.k)
 

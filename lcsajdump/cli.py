@@ -168,6 +168,7 @@ def main(
     insns = loader.disassemble()
 
     gb = LCSAJGraph(insns, arch)
+    gb.binary_path = binary_path
     gb.build_lazy(max_depth=depth)
 
     finder = RainbowFinder(

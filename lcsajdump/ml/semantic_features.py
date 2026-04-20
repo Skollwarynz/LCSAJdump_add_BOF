@@ -1,123 +1,104 @@
 """
 semantic_features.py — Symbolic execution for deep semantic feature extraction.
-
-Uses angr to determine the real effect of a gadget on the CPU state, bypassing
-obfuscation and syntactic differences.
-
-Features extracted:
-- sm_controls_rdi (or arch equivalent): Does the gadget allow controlling the primary arg register?
-- sm_stack_pivot_size: Concrete delta in the stack pointer.
-- sm_writes_memory: True if any concrete or symbolic write to memory occurs.
+(Nuclear Option: No SimProcedures + Hard Timeout)
 """
 
 from __future__ import annotations
 
 import logging
-import os
-import sys
+import time
 
-# Suppress angr warnings for cleaner output
-logging.getLogger("angr").setLevel(logging.ERROR)
-logging.getLogger("cle").setLevel(logging.ERROR)
+# Zittiamo definitivamente angr
+logging.getLogger("angr").setLevel(logging.CRITICAL)
+logging.getLogger("cle").setLevel(logging.CRITICAL)
+logging.getLogger("pyvex").setLevel(logging.CRITICAL)
+logging.getLogger("claripy").setLevel(logging.CRITICAL)
+
+_project_cache = {}
 
 def extract_semantic_features(binary_path: str, gadget_addr: int, gadget_size: int, arch: str) -> dict:
-    """
-    Given a gadget address and size, symbolically execute it using angr.
-    Returns a dict of semantic features.
-    """
+    feats = {"sm_controls_arg_reg": 0, "sm_stack_pivot_size": 0, "sm_writes_memory": 0}
     try:
         import angr
         import claripy
     except ImportError:
-        # Fallback if angr is not installed
-        return {
-            "sm_controls_arg_reg": 0,
-            "sm_stack_pivot_size": 0,
-            "sm_writes_memory": 0
-        }
-
-    # Default fallback features
-    feats = {
-        "sm_controls_arg_reg": 0,
-        "sm_stack_pivot_size": 0,
-        "sm_writes_memory": 0
-    }
+        return feats
 
     try:
-        # Create a barebone angr project
-        proj = angr.Project(binary_path, auto_load_libs=False)
+        # Timeout di sicurezza a livello di progetto (impedisce ad angr di bloccarsi su load pesanti)
+        import signal
+        def handler(signum, frame):
+            raise TimeoutError("Angr Execution Timeout")
         
-        # Determine arch-specific registers
-        arg_reg = "rdi" if arch == "x86_64" else "x0" if arch == "arm64" else "a0"
-        sp_reg = "rsp" if arch == "x86_64" else "sp"
+        signal.signal(signal.SIGALRM, handler)
+        
+        # Timeout rigido di 1 secondo PER INTERO GADGET
+        signal.alarm(1)
 
-        # Initialize a blank state at the gadget address
-        # We need to make sure the stack is fully symbolic so we can detect if rdi takes a value from it
-        state = proj.factory.blank_state(addr=gadget_addr)
-        
-        # Inject symbolic data onto the stack
-        sp = state.solver.eval(state.regs.sp)
-        for i in range(16):
-            sym_var = claripy.BVS(f"stack_var_{i}", 64)
-            state.memory.store(sp + (i * 8), sym_var)
+        try:
+            if binary_path not in _project_cache:
+                _project_cache[binary_path] = angr.Project(
+                    binary_path, 
+                    auto_load_libs=False,
+                    use_sim_procedures=False
+                )
+            proj = _project_cache[binary_path]
+            
+            arg_reg = "rdi" if arch == "x86_64" else "x0" if arch == "arm64" else "a0"
+            sp_reg = "rsp" if arch == "x86_64" else "sp"
 
-        # Record initial stack pointer to calculate pivot size later
-        initial_sp = state.solver.eval(getattr(state.regs, sp_reg))
+            state = proj.factory.blank_state(
+                addr=gadget_addr,
+                add_options={angr.options.LAZY_SOLVES, angr.options.SYMBOL_FILL_UNCONSTRAINED_MEMORY, angr.options.SYMBOL_FILL_UNCONSTRAINED_REGISTERS}
+            )
+            
+            sp = state.solver.eval(state.regs.sp)
+            for i in range(16):
+                sym_var = claripy.BVS(f"stack_var_{i}", 64)
+                state.memory.store(sp + (i * (proj.arch.bits // 8)), sym_var)
 
-        # Setup simulation manager and run for exactly the gadget length/blocks
-        # It's better to step through it manually to control execution
-        simgr = proj.factory.simgr(state)
-        
-        # Step until we hit a return, jump, or run out of bounds (or too many steps)
-        steps = 0
-        
-        # We need to tell angr not to stop at unconstrained jumps
-        simgr = proj.factory.simgr(state, save_unconstrained=True)
-        
-        while (simgr.active or simgr.unconstrained) and steps < 10:
-            simgr.step()
-            steps += 1
-            if simgr.unconstrained:
-                # We hit an unconstrained jump (like ret with symbolic stack)
-                break
+            initial_sp = state.solver.eval(getattr(state.regs, sp_reg))
+
+            simgr = proj.factory.simgr(state, save_unconstrained=True)
             
-        # We check the deadended states (e.g. hit ret) or active states
-        final_state = None
-        if simgr.unconstrained:
-            final_state = simgr.unconstrained[0]
-        elif simgr.deadended:
-            final_state = simgr.deadended[0]
-        elif simgr.active:
-            final_state = simgr.active[0]
-            
-        if final_state:
-            # Check stack pivot
-            # Sometimes SP is symbolic if we pivoted to a symbolic value
-            sp_val = getattr(final_state.regs, sp_reg)
-            if not sp_val.symbolic:
-                final_sp = final_state.solver.eval(sp_val)
-                feats["sm_stack_pivot_size"] = final_sp - initial_sp
-            else:
-                feats["sm_stack_pivot_size"] = -1 # Symbolic pivot!
-            
-            # Check if arg_reg is symbolic (controlled by input)
-            arg_val = getattr(final_state.regs, arg_reg)
-            
-            # Print for debug when not zero
-            if arg_val.symbolic:
-                # If it's symbolic, there's a very high chance we control it,
-                # but let's be less strict than string matching variable names
-                # since angr might simplify or rename them
-                feats["sm_controls_arg_reg"] = 1
-                
-            # Check memory writes (simplified: inspect action log)
-            for action in final_state.history.actions:
-                if action.type == "mem" and action.action == "write":
-                    feats["sm_writes_memory"] = 1
+            steps = 0
+            while (simgr.active or simgr.unconstrained) and steps < 4:
+                if len(simgr.active) > 1:
+                    simgr.active = [simgr.active[0]]
+                    
+                simgr.step()
+                steps += 1
+                if simgr.unconstrained:
                     break
+                
+            final_state = None
+            if simgr.unconstrained:
+                final_state = simgr.unconstrained[0]
+            elif simgr.deadended:
+                final_state = simgr.deadended[0]
+            elif simgr.active:
+                final_state = simgr.active[0]
+                
+            if final_state:
+                sp_val = getattr(final_state.regs, sp_reg)
+                if not sp_val.symbolic:
+                    final_sp = final_state.solver.eval(sp_val)
+                    feats["sm_stack_pivot_size"] = final_sp - initial_sp
+                else:
+                    feats["sm_stack_pivot_size"] = -1 
+                
+                arg_val = getattr(final_state.regs, arg_reg)
+                if arg_val.symbolic:
+                    feats["sm_controls_arg_reg"] = 1
+                    
+                for action in final_state.history.actions:
+                    if action.type == "mem" and action.action == "write":
+                        feats["sm_writes_memory"] = 1
+                        break
+        finally:
+            signal.alarm(0)
 
-    except Exception as e:
-        # Return fallback on any analysis failure
+    except Exception:
         pass
         
     return feats

@@ -7,7 +7,7 @@ Falls back transparently to the heuristic scorer if the model is unavailable.
 Usage
 -----
     # In rainbowBFS.py __init__:
-    from lcsajdump_dbg.ml.model_scorer import MLScorer
+    from lcsajdump.ml.model_scorer import MLScorer
     self._ml_scorer = MLScorer.load('gadget_model.pkl', arch=arch)
 
     # Replace score_gadget body:
@@ -17,7 +17,7 @@ Usage
 
 Monkey-patch helper
 -------------------
-    from lcsajdump_dbg.ml.model_scorer import patch_rainbowfinder
+    from lcsajdump.ml.model_scorer import patch_rainbowfinder
     patch_rainbowfinder(finder_instance, model_path='gadget_model.pkl', arch='arm64')
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ import pickle
 import sys
 from typing import Optional
 
-from lcsajdump_dbg.ml.features import extract_features, FEATURE_NAMES
+from lcsajdump.ml.features import extract_features, FEATURE_NAMES
 
 # ── MLScorer class ─────────────────────────────────────────────────────────────
 
@@ -78,7 +78,7 @@ class MLScorer:
             lm = None
             if lm_path:
                 try:
-                    from lcsajdump_dbg.ml.instruction_lm import InstructionLM
+                    from lcsajdump.ml.instruction_lm import InstructionLM
                     lm = InstructionLM.load(lm_path)
                     print(f"[model_scorer] Loaded InstructionLM from {lm_path} "
                           f"(vocab={lm.vocab_size()}, dim={lm.vector_size})")
@@ -136,6 +136,7 @@ class MLScorer:
             address=path[0] if path else 0,
             gadget_pool=self._gadget_pool if self._gadget_pool else None,
             majority_term_is_ret=getattr(self, '_majority_term_is_ret', 1),
+            binary_path=getattr(graph_manager, "binary_path", None),
         )
 
     def score_from_instructions(
@@ -146,6 +147,7 @@ class MLScorer:
         address: int = 0,
         gadget_pool=None,
         majority_term_is_ret: int = 1,
+        binary_path: str = None,
     ) -> int:
         """
         Score a gadget given its already-collected instruction list.
@@ -160,6 +162,7 @@ class MLScorer:
         heuristic_score : int — existing heuristic score (used as a feature)
         address : int — primary gadget address (for bad-byte features)
         gadget_pool : set of int, optional — all gadget addresses in the binary
+        binary_path : str, optional - path to the binary
 
         Returns
         -------
@@ -172,6 +175,7 @@ class MLScorer:
             self._gadget_pool if self._gadget_pool else None
         )
 
+        g_size = sum(i.get("size", 4) for i in instructions) if instructions else 15
         feats = extract_features(
             instructions=instructions,
             arch=self._arch,
@@ -181,6 +185,8 @@ class MLScorer:
             gadget_pool=pool,
             lm=self._lm,
             majority_term_is_ret=majority_term_is_ret,
+            binary_path=binary_path,
+            gadget_size=g_size,
         )
 
         # Build feature row in model's expected order
@@ -214,11 +220,16 @@ class MLScorer:
         for path in paths:
             instructions = self._collect_instructions(path, graph_manager)
             heuristics.append(0)
+            g_size = sum(i.get("size", 4) for i in instructions) if instructions else 15
             feats = extract_features(
                 instructions=instructions,
                 arch=self._arch,
                 heuristic_score=0,
                 address=path[0] if path else 0,
+                gadget_pool=self._gadget_pool or None,
+                lm=self._lm,
+                binary_path=getattr(graph_manager, "binary_path", None),
+                gadget_size=g_size,
             )
             rows.append([feats.get(f, 0) for f in self._feat_names])
 
@@ -244,6 +255,7 @@ class MLScorer:
                     instructions.append({
                         'mnemonic': insn.mnemonic if hasattr(insn, 'mnemonic') else insn.get('mnemonic', ''),
                         'op_str':   insn.op_str   if hasattr(insn, 'op_str')   else insn.get('op_str', ''),
+                        'size':     insn.size     if hasattr(insn, 'size')     else insn.get('size', 4),
                     })
         return instructions
 
@@ -263,7 +275,7 @@ def _batch_rescore(finder_instance, scorer, original_score_gadget_func):
       2. Assign final scores linearly by rank: rank-0 → 400, rank-(n-1) → 50.
     This guarantees strict ordering and full [50, 400] spread on ANY binary size.
     """
-    from lcsajdump_dbg.ml.features import extract_features
+    from lcsajdump.ml.features import extract_features
 
     sigs = list(finder_instance.grouped_gadgets.keys())
     if not sigs:
@@ -281,6 +293,7 @@ def _batch_rescore(finder_instance, scorer, original_score_gadget_func):
         insns = scorer._collect_instructions(path, finder_instance.gm)
         heuristic = original_score_gadget_func(finder_instance, path)
         heuristics.append(heuristic)
+        g_size = sum(i.get("size", 4) for i in insns) if insns else 15
         feats = extract_features(
             instructions=insns,
             arch=scorer._arch,
@@ -289,6 +302,8 @@ def _batch_rescore(finder_instance, scorer, original_score_gadget_func):
             address=path[0] if path else 0,
             gadget_pool=scorer._gadget_pool or None,
             lm=scorer._lm,
+            binary_path=getattr(finder_instance.gm, "binary_path", None),
+            gadget_size=g_size,
         )
         rows.append([feats.get(f, 0) for f in scorer._feat_names])
 

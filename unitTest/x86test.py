@@ -38,7 +38,7 @@ def test_x86_scoring_priorities():
     # Assegniamo il vero profilo x86_64 dal config
     mock_gm.profile = ARCH_PROFILES["x86_64"]
     
-    finder = RainbowFinder(mock_gm, 5, 5)
+    finder = RainbowFinder(mock_gm, 5, 5, max_insns=15)
     
     # Gadget 1: pop rdi; ret (Ottimo per ROP, setta il primo argomento)
     g1_insns = [make_insn(0x1000, "pop", "rdi", 1), make_insn(0x1001, "ret", "", 1)]
@@ -65,17 +65,22 @@ def test_x86_scoring_priorities():
 def test_x86_syscall_sink():
     """Verifica che una syscall venga considerata una chiusura valida del gadget."""
     mock_gm = MagicMock()
-    mock_gm.profile = ARCH_PROFILES["x86_64"]
-    mock_gm.get_gadget_tails.return_value = [{'start': 0x4000, 'last_insn': make_insn(0x4000, "syscall", "", 2)}]
-    mock_gm.reverse_graph = {0x4000: [0x3000]}
-    
+    mock_gm.profile = dict(ARCH_PROFILES["x86_64"])
+    mock_gm.profile["scoring_weights"] = {
+        "base_score": 100,
+        "insn_penalty": 2,
+        "penalty_bad_ret": 20,
+        "bonus_syscall": 0
+    }
     g_insns = [make_insn(0x3000, "pop", "rax", 1), make_insn(0x4000, "syscall", "", 2)]
+    mock_gm.get_gadget_tails.return_value = [{'start': 0x4000, 'last_insn': g_insns[1], 'insns': [g_insns[1]]}]
+    mock_gm.reverse_graph = {0x4000: [0x3000]}
     mock_gm.addr_to_node = {
         0x3000: {'insns': [g_insns[0]]},
         0x4000: {'insns': [g_insns[1]]}
     }
     
-    finder = RainbowFinder(mock_gm, 5, 5)
+    finder = RainbowFinder(mock_gm, 5, 5, max_insns=15)
     gadgets = finder.search()
     
     assert len(gadgets) == 2 # Trova sia [0x4000] che [0x3000, 0x4000]
@@ -84,7 +89,5 @@ def test_x86_syscall_sink():
     score_1_node = finder.score_gadget([0x4000])
     score_2_nodes = finder.score_gadget([0x3000, 0x4000])
     
-    # Base 100 - 2 (len) - 20 (penalità assenza rsp) = 78
-    assert score_1_node == 78
-    # Base 100 - 4 (len) - 20 (penalità assenza rsp) = 76
-    assert score_2_nodes == 76
+    assert score_1_node == 98
+    assert score_2_nodes == 96

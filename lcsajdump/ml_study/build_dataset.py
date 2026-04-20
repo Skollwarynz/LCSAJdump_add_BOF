@@ -3,11 +3,11 @@ dataset_builder.py — Build a labelled gadget dataset from exploit scripts.
 
 Usage
 -----
-    from lcsajdump_dbg.ml.dataset_builder import build_dataset, THESIS_SAMPLES
+    from lcsajdump.ml.dataset_builder import build_dataset, THESIS_SAMPLES
     X, y, groups, meta = build_dataset(THESIS_SAMPLES)
 
     # Or from the command line:
-    python -m lcsajdump_dbg.ml.dataset_builder --out dataset.csv
+    python -m lcsajdump.ml.dataset_builder --out dataset.csv
 
 Positive label (y=1): gadget address was used in an exploit script.
 Negative label (y=0): gadget was found by lcsajdump but not used.
@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from lcsajdump_dbg.ml.features import (
+from lcsajdump.ml.features import (
     extract_features,
     FEATURE_NAMES,
     FEATURE_NAMES_WITH_LM,
@@ -128,7 +128,7 @@ def _run_lcsajdump(
     cmd = [
         sys.executable,
         "-m",
-        "lcsajdump_dbg.cli",
+        "lcsajdump.cli",
         binary_path,
         "--json",
         "--limit",
@@ -278,8 +278,11 @@ def _build_rows_for_binary(
     compiled_patterns = patterns or []
 
     # Build rows
+    # Build rows
     rows = []
     for g in gadgets:
+        g_size = sum(i.get("size", 4) for i in g.get("instructions", [])) if g.get("instructions") else 15
+
         feats = extract_features(
             instructions=g["instructions"],
             arch=arch,
@@ -288,6 +291,8 @@ def _build_rows_for_binary(
             address=g["address"],
             gadget_pool=all_lcsaj_addrs,
             lm=lm,
+            binary_path=binary_path,  
+            gadget_size=g_size        
         )
         by_addr = g["address"] in used_addrs or any(
             a in used_addrs for a in g["duplicate_addresses"]

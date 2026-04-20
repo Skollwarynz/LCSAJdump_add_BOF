@@ -7,10 +7,10 @@ Install:  pip install lightgbm scikit-learn pandas numpy shap
 Usage
 -----
     # Full pipeline
-    python -m lcsajdump_dbg.ml.trainer --out model.pkl
+    python -m lcsajdump.ml.trainer --out model.pkl
 
     # Or in Python:
-    from lcsajdump_dbg.ml.trainer import train_pipeline
+    from lcsajdump.ml.trainer import train_pipeline
     model, report = train_pipeline(X, y, groups)
 """
 
@@ -37,8 +37,8 @@ except ImportError as e:
     )
     sys.exit(1)
 
-from lcsajdump_dbg.ml.features import FEATURE_NAMES, ARCH_PROFILES
-from lcsajdump_dbg.ml.dataset_builder import build_dataset, ALL_SAMPLES
+from lcsajdump.ml.features import FEATURE_NAMES, ARCH_PROFILES
+from lcsajdump.ml_study.build_dataset import build_dataset, ALL_SAMPLES
 
 # ── Hyperparameters ────────────────────────────────────────────────────────────
 
@@ -434,6 +434,7 @@ if __name__ == "__main__":
         df = pd.read_csv(args.csv)
         for col in FEATURE_NAMES:
             if col not in df.columns:
+                print(f"[Warning] Manca la feature {col} nel CSV! Faccio padding con 0, ma dovresti ricreare il dataset.", file=sys.stderr)
                 df[col] = 0
         X = df[FEATURE_NAMES].to_dict("records")
         y = df["label"].tolist()
@@ -442,7 +443,7 @@ if __name__ == "__main__":
         meta = df[["binary_id", "binary", "arch", "address"]].to_dict("records")
     else:
         print("[trainer] Building dataset from all samples...")
-        from lcsajdump_dbg.ml.dataset_builder import build_dataset, ALL_SAMPLES
+        from lcsajdump.ml_study.build_dataset import build_dataset, ALL_SAMPLES
 
         X, y, groups, meta = build_dataset(ALL_SAMPLES)
 

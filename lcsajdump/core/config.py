@@ -50,15 +50,15 @@ ARCH_PROFILES = {
         # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.989)
         "scoring_weights": {
           "base_score": 100,
-          "insn_penalty": 26,
-          "bonus_link_reg": 69,
-          "bonus_arg_reg": 46,
-          "bonus_frame_reg": 61,
-          "penalty_internal_call": 152,
-          "bonus_trampoline": 2,
-          "penalty_bad_ret": 251,
+          "insn_penalty": 12,
+          "bonus_link_reg": 1,
+          "bonus_arg_reg": 1,
+          "bonus_frame_reg": 1,
+          "penalty_internal_call": 1,
+          "bonus_trampoline": 1,
+          "penalty_bad_ret": 854,
           "bonus_direct_call": 35,
-          "bonus_pivot": 147,
+          "bonus_pivot": 1,
           "bonus_syscall": 123
         },
         "search_params": {
@@ -109,17 +109,17 @@ ARCH_PROFILES = {
         "stack_pointer_reg": "rsp",
         # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.473)
         "scoring_weights": {
-            "base_score": 100,
-            "insn_penalty": 48,
-            "bonus_link_reg": 2,
-            "bonus_arg_reg": 32,
-            "bonus_frame_reg": 0,
-            "penalty_internal_call": 90,
-            "bonus_trampoline": 1,
-            "penalty_bad_ret": 443,
-            "bonus_direct_call": 10,
-            "bonus_pivot": 56,
-            "bonus_syscall": 0
+          "base_score": 100,
+          "insn_penalty": 140,
+          "bonus_link_reg": 1,
+          "bonus_arg_reg": 1,
+          "bonus_frame_reg": 1,
+          "penalty_internal_call": 1,
+          "bonus_trampoline": 1,
+          "penalty_bad_ret": 649,
+          "bonus_direct_call": 10,
+          "bonus_pivot": 1,
+          "bonus_syscall": 0
         },
         "search_params": {
             "limit": 5,
@@ -164,15 +164,15 @@ ARCH_PROFILES = {
         # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.700)
         "scoring_weights": {
           "base_score": 100,
-          "insn_penalty": 37,
-          "bonus_link_reg": 93,
-          "bonus_arg_reg": 19,
-          "bonus_frame_reg": 44,
-          "penalty_internal_call": 32,
-          "bonus_trampoline": 13,
-          "penalty_bad_ret": 14,
+          "insn_penalty": 21,
+          "bonus_link_reg": 1,
+          "bonus_arg_reg": 1,
+          "bonus_frame_reg": 1,
+          "penalty_internal_call": 1,
+          "bonus_trampoline": 1,
+          "penalty_bad_ret": 738,
           "bonus_direct_call": 15,
-          "bonus_pivot": 113,
+          "bonus_pivot": 1,
           "bonus_syscall": 56
         },
         "search_params": {
@@ -204,15 +204,15 @@ ARCH_PROFILES = {
         # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.384)
         "scoring_weights": {
           "base_score": 100,
-          "insn_penalty": 54,
-          "bonus_link_reg": 89,
-          "bonus_arg_reg": 111,
-          "bonus_frame_reg": 61,
-          "penalty_internal_call": 99,
-          "bonus_trampoline": 24,
-          "penalty_bad_ret": 558,
+          "insn_penalty": 15,
+          "bonus_link_reg": 1,
+          "bonus_arg_reg": 1,
+          "bonus_frame_reg": 1,
+          "penalty_internal_call": 1,
+          "bonus_trampoline": 1,
+          "penalty_bad_ret": 685,
           "bonus_direct_call": 0,
-          "bonus_pivot": 25,
+          "bonus_pivot": 1,
           "bonus_syscall": 127
         },
         "search_params": {

@@ -1,7 +1,7 @@
 """
 features.py — Architecture-aware feature extraction for gadget ML scoring.
 
-Depends only on the stdlib + config.py (already a lcsajdump_dbg dep).
+Depends only on the stdlib + config.py (already a lcsajdump dep).
 Can be imported inside rainbowBFS.py without pulling in ML packages.
 """
 
@@ -16,7 +16,7 @@ import os
 
 def _load_profiles():
     try:
-        from lcsajdump_dbg.core.config import ARCH_PROFILES
+        from lcsajdump.core.config import ARCH_PROFILES
 
         return ARCH_PROFILES
     except ImportError:
@@ -24,7 +24,7 @@ def _load_profiles():
     try:
         # Running from the debug repo root
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-        from lcsajdump_dbg.core.config import ARCH_PROFILES
+        from lcsajdump.core.config import ARCH_PROFILES
 
         return ARCH_PROFILES
     except ImportError:
@@ -84,7 +84,7 @@ FEATURE_NAMES = [
 # Extended feature set with InstructionLM embeddings (lm_emb_0 … lm_emb_15).
 # Built lazily so importing features.py never pulls in gensim.
 def _get_feature_names_with_lm():
-    from lcsajdump_dbg.ml.instruction_lm import LM_FEATURE_NAMES
+    from lcsajdump.ml.instruction_lm import LM_FEATURE_NAMES
 
     return FEATURE_NAMES + LM_FEATURE_NAMES
 
@@ -475,17 +475,11 @@ def extract_features(
     sm_controls = 0
     sm_pivot = 0
     sm_writes = 0
-    if binary_path and address > 0 and gadget_size > 0:
-        try:
-            from lcsajdump_dbg.ml.semantic_features import extract_semantic_features
-            # Extract features. We don't really care about performance for building the dataset.
-            sm_feats = extract_semantic_features(binary_path, address, gadget_size, arch)
-            sm_controls = sm_feats.get("sm_controls_arg_reg", 0)
-            sm_pivot = sm_feats.get("sm_stack_pivot_size", 0)
-            sm_writes = sm_feats.get("sm_writes_memory", 0)
-        except Exception:
-            pass
-
+    
+    # SALTA COMPLETAMENTE L'ESTRAZIONE SEMANTICA PER LA CREAZIONE DEL DATASET 
+    # PER EVITARE CHE ANGR BLOCCHI LO SCRIPT SU BINARI GRANDI.
+    # IN FASE DI INFERENCE VERRÀ ESEGUITA REGOLARMENTE.
+    
     # ── Assemble feature dict ────────────────────────────────────────────────
     feats = {
         "insn_count": insn_count,

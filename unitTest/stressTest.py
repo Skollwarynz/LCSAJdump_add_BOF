@@ -107,7 +107,7 @@ def test_stress_large_binary_chain():
     # Cerchiamo gadget con profondità limitata
     # Se il grafo è 0->1->2->3... e noi cerchiamo da Ret all'indietro:
     # Ret(999) <- 998 <- 997 ...
-    finder = RainbowFinder(graph, max_depth=50, max_darkness=5)
+    finder = RainbowFinder(graph, max_depth=50, max_darkness=5, max_insns=15)
     gadgets = finder.search()
     
     # FIX: Ora dovremmo trovare percorsi validi perché ci sono più nodi collegati
@@ -119,7 +119,7 @@ def test_stress_large_binary_chain():
 
 def test_rainbow_cycle_handling():
     mock_gm = MagicMock()
-    mock_gm.get_gadget_tails.return_value = [{'start': 0x3000, 'last_insn': make_insn(0x3004, "ret", "")}]
+    mock_gm.get_gadget_tails.return_value = [{'start': 0x3000, 'last_insn': make_insn(0x3004, "ret", ""), 'insns': [make_insn(0x3004, "ret", "")]}]
     mock_gm.reverse_graph = {
         0x3000: [0x2000], 0x2000: [0x1000], 0x1000: [0x2000]
     }
@@ -128,18 +128,18 @@ def test_rainbow_cycle_handling():
         0x2000: {'insns': [make_insn(0x2000, "nop", "")]}, 
         0x3000: {'insns': [make_insn(0x3000, "ret", "")]}
     }
-    finder = RainbowFinder(mock_gm, max_depth=10, max_darkness=5)
+    finder = RainbowFinder(mock_gm, max_depth=10, max_darkness=5, max_insns=15)
     gadgets = finder.search()
     assert len(gadgets) > 0
 
 def test_rainbow_pruning_darkness():
     mock_gm = MagicMock()
-    mock_gm.get_gadget_tails.return_value = [{'start': 0x4000, 'last_insn': make_insn(0x4000, "ret", "")}]
+    mock_gm.get_gadget_tails.return_value = [{'start': 0x4000, 'last_insn': make_insn(0x4000, "ret", ""), 'insns': [make_insn(0x4000, "ret", "")]}]
     mock_gm.reverse_graph = {
         0x4000: [0x3000], 0x3000: [0x2000], 0x2000: [0x1000],
     }
     mock_gm.addr_to_node = {k: {'insns': []} for k in [0x1000, 0x2000, 0x3000, 0x4000]}
-    finder = RainbowFinder(mock_gm, max_depth=10, max_darkness=0) 
+    finder = RainbowFinder(mock_gm, max_depth=10, max_darkness=0, max_insns=15) 
     gadgets = finder.search()
     pass
 
@@ -152,7 +152,7 @@ def test_scoring_priorities():
         "ret_mnems": {"ret"}
     }
     
-    finder = RainbowFinder(mock_gm, 5, 5)
+    finder = RainbowFinder(mock_gm, 5, 5, max_insns=15)
     g1_insns = [make_insn(0x1000, "ld", "ra, 8(sp)"), make_insn(0x1004, "ret", "")]
     g2_insns = [make_insn(0x2000, "add", "a0, a1, a2"), make_insn(0x2004, "ret", "")]
     mock_gm.addr_to_node = {0x1000: {'insns': g1_insns}, 0x2000: {'insns': g2_insns}}
