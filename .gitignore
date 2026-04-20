@@ -7,8 +7,10 @@ v3testresults.txt
 tesi
 
 # Temporary Dev Artifacts
-archive_experiments/
 *.log
 output_*.txt
 *.csv
+
+# ML Models (runtime artifacts)
+*.pkl
 

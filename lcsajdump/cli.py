@@ -129,7 +129,7 @@ def main(
                                RISC-V                            ARM64                          x86-64
 
 
-        https://ko-fi.com/chris1sflaggin - Support the project!    |    https://chris1sflaggin.it/LCSAJdump/ - Official Website
+        https://github.com/sponsors/Chris1sFlaggin - Support the project!    |    https://chris1sflaggin.it/LCSAJdump/ - Official Website
     """
         + "\33[0m"
     )
