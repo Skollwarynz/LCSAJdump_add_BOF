@@ -316,8 +316,7 @@ class LCSAJGadgets:
     @staticmethod
     def _run(binary_path: str, arch: str = 'auto', bad_chars: str = '',
              depth: int = 20, darkness: int = 5, instructions: int = 15,
-             all_exec: bool = False, algo: bool = False,
-             ml_model: str = None) -> list:
+             all_exec: bool = False, algo: bool = False) -> list:
         cmd = [
             sys.executable, '-m', 'lcsajdump.cli',
             binary_path,

@@ -168,6 +168,8 @@ def _run_lcsajdump(binary, args):
         cmd += ['--bad-chars', args.bad_chars]
     if args.all_exec:
         cmd += ['--all-exec']
+    if args.algo:
+        cmd += ['--algo']
 
     result = subprocess.run(cmd, capture_output=True, text=True, env=_make_env())
     if result.returncode != 0:
