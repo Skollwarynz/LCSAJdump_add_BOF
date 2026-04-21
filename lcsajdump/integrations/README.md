@@ -26,7 +26,11 @@ from pwn import *
 from lcsajdump.integrations.pwntools_helper import LCSAJGadgets
 
 # Analyze a binary (auto-detects architecture)
+# Uses ML ranking by default (if model is available)
 gadgets = LCSAJGadgets('./challenge')
+
+# Use algorithmic ranking instead (bypass ML)
+gadgets_algo = LCSAJGadgets('./challenge', algo=True)
 
 # Search for specific gadgets
 pop_rdi = gadgets.find('pop rdi')[0]
