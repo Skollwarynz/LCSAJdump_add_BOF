@@ -584,6 +584,16 @@ class LCSAJGadgets:
                 break
         return sorted(result, key=lambda g: g.score, reverse=True)
 
+    def syscall(self) -> list[Gadget]:
+        """Return gadgets that perform a system call (syscall, svc, int 0x80, ecall), sorted by score."""
+        syscall_mnems = {'syscall', 'sysenter', 'svc', 'int', 'ecall'}
+        result = []
+        for g in self._gadgets:
+            # Check if any instruction in the gadget is a syscall
+            if any(i.get('mnemonic', '').lower() in syscall_mnems for i in g.instructions):
+                result.append(g)
+        return sorted(result, key=lambda g: g.score, reverse=True)
+
     def pivot_gadgets(self) -> list[Gadget]:
         """Return stack pivot gadgets, sorted by score descending.
 
