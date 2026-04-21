@@ -126,8 +126,10 @@ def _make_parser():
                    help='Analyse all executable sections')
     p.add_argument('--find',               type=str, default=None,
                    help='Filter gadgets whose instructions contain this pattern')
-    p.add_argument('--arch',               type=str, default='auto',
+    p.add_argument('--arch', type=str, default='auto',
                    help='Architecture override (auto, x86_64, arm64, riscv64)')
+    p.add_argument('--from-json', type=str, default=None, dest='from_json',
+                   help='Load gadgets from pre-generated JSON file (skips analysis)')
     return p
 
 
@@ -282,10 +284,24 @@ class LCSAJCommand(gdb.Command):
             # argparse --help triggers SystemExit(0); message already printed
             return
 
-        # --- resolve binary ---
-        binary = args.binary
-        if not binary:
-            binary = _autodetect_binary()
+        # --- handle JSON loading ---
+        if args.from_json:
+            json_path = args.from_json
+            if not os.path.isfile(json_path):
+                gdb.write(f'[lcsaj] JSON file not found: {json_path}\n')
+                return
+            gdb.write(_gr(f'[lcsaj] Loading gadgets from {json_path} ...\n'))
+            try:
+                with open(json_path, 'r') as f:
+                    data = json.load(f)
+            except Exception as e:
+                gdb.write(f'[lcsaj] Error loading JSON: {e}\n')
+                return
+        else:
+            # --- resolve binary ---
+            binary = args.binary
+            if not binary:
+                binary = _autodetect_binary()
             if not binary:
                 gdb.write(
                     '[lcsaj] Could not auto-detect binary. '
@@ -294,17 +310,17 @@ class LCSAJCommand(gdb.Command):
                 return
             gdb.write(_gr(f'[lcsaj] Auto-detected binary: {binary}\n'))
 
-        if not os.path.isfile(binary):
-            gdb.write(f'[lcsaj] Binary not found: {binary}\n')
-            return
+            if not os.path.isfile(binary):
+                gdb.write(f'[lcsaj] Binary not found: {binary}\n')
+                return
 
-        # --- run analysis ---
-        gdb.write(_gr(f'[lcsaj] Analysing {binary} ...\n'))
-        try:
-            data = _run_lcsajdump(binary, args)
-        except RuntimeError as e:
-            gdb.write(f'[lcsaj] Error: {e}\n')
-            return
+            # --- run analysis ---
+            gdb.write(_gr(f'[lcsaj] Analysing {binary} ...\n'))
+            try:
+                data = _run_lcsajdump(binary, args)
+            except RuntimeError as e:
+                gdb.write(f'[lcsaj] Error: {e}\n')
+                return
 
         sequential  = data.get('sequential', [])
         jump_based  = data.get('jump_based', [])
@@ -351,8 +367,13 @@ class LCSAJCommand(gdb.Command):
 
         # --- footer ---
         total_available = len(sequential) + len(jump_based)
-        _w(_gr(f'  Showing {total_shown} of {total_available} gadgets.'))
-        _w(_gr(f'  Tip: use -l N to show more, --find PATTERN to filter.'))
+        _w(_gr(f' Showing {total_shown} of {total_available} gadgets.'))
+        if args.from_json:
+            _w(_gr(f' Source: {args.from_json}'))
+            _w(_gr(f' Tip: use -l N to show more, --find PATTERN to filter.'))
+        else:
+            _w(_gr(f' Tip: use -l N to show more, --find PATTERN to filter.'))
+            _w(_gr(f' Save results: lcsajdump {binary} --json --output gadgets.json'))
         _w('')
 
     def complete(self, text, word):

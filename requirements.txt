@@ -1,5 +1,16 @@
+# Core dependencies (required)
 capstone>=5.0.0
-pyelftools>=0.29
+pyelftools>=0.32
 networkx>=3.0
 click>=8.0
-regex
+regex>=2024.0.0
+
+# ML dependencies (optional, for ML ranking)
+lightgbm>=4.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Note: angr and shap are required only for training new models.
+# For semantic feature extraction: pip install angr>=9.2.0
+# For SHAP analysis: pip install shap>=0.42.0
