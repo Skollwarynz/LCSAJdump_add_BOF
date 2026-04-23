@@ -192,5 +192,5 @@ Visit the project web page: [LCSAJdump web page](https://chris1sflaggin.it/LCSAJ
 ---
 
 <div align="center">
-Made by <b>Chris1sflaggin</b> as a research project for Automated Gadget Discovery.
+Made by <b>Chris1sflaggin</b> as a research project for Bachelor's Thesis.
 </div>
