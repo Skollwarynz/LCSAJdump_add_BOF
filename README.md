@@ -149,7 +149,7 @@ lcsajdump --algo <path_to_binary>
 
 ---
 
-## 📊 Accuracy & Benchmarks
+## Accuracy & Benchmarks
 
 LCSAJdump is backed by a rigorous, incrementally validated test suite located in the `benchmarkTests/` directory.
 
@@ -159,7 +159,7 @@ When evaluated on monolithic, real-world executables like `libc.so.6`, the engin
 
 ---
 
-## 🧠 Developer & ML Guide
+## Developer & ML Guide
 
 The repository is structured to support both end-users and ML researchers.
 
