@@ -46,7 +46,7 @@ If you want to add support for a new architecture (e.g., MIPS, PowerPC), you nee
 
 ---
 
-## 🧠 2. Machine Learning Pipeline (ML Training)
+## 2. Machine Learning Pipeline (ML Training)
 
 The scoring engine relies on a **LightGBM** model. The entire training pipeline is located in the `lcsajdump/ml_study/` directory.
 
