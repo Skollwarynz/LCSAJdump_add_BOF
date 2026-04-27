@@ -6,7 +6,7 @@ import os
 def ask_install_plugins():
     """Interactively ask user if they want to install plugins during pip install."""
     print("\n" + "="*60)
-    print("LCSAJdump v2.0.0")
+    print("LCSAJdump v2.0.1")
     print("="*60)
     print("\nLCSAJdump includes optional integrations for popular tools:")
     print("  1. GDB/pwndbg Plugin  - Run 'lcsaj' command inside the debugger")
