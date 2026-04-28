@@ -8,7 +8,7 @@ Usage
 -----
     # In rainbowBFS.py __init__:
     from lcsajdump.ml.model_scorer import MLScorer
-    self._ml_scorer = MLScorer.load('gadget_model.pkl', arch=arch)
+    self._ml_scorer = MLScorer.load('chainfinder_v5_hybrid.pkl', arch=arch)
 
     # Replace score_gadget body:
     def score_gadget(self, path):
@@ -18,7 +18,7 @@ Usage
 Monkey-patch helper
 -------------------
     from lcsajdump.ml.model_scorer import patch_rainbowfinder
-    patch_rainbowfinder(finder_instance, model_path='gadget_model.pkl', arch='arm64')
+    patch_rainbowfinder(finder_instance, model_path='chainfinder_v5_hybrid.pkl', arch='arm64')
 """
 from __future__ import annotations
 
