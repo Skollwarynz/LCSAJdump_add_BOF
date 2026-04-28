@@ -139,6 +139,7 @@ def make_objective(df_arch: pd.DataFrame):
             "bonus_direct_call": trial.suggest_int("bonus_direct_call", 0, 80),
             "bonus_pivot": trial.suggest_int("bonus_pivot", 0, 150),
             "bonus_syscall": trial.suggest_int("bonus_syscall", 0, 150),
+            "penalty_threshold": trial.suggest_int("penalty_threshold", 20, 80),
         }
 
         # Search params (da ottimizzare) — nomi devono corrispondere a config.py
@@ -190,6 +191,7 @@ def tune_arch(df: pd.DataFrame, arch: str, n_trials: int = 100) -> dict:
         "bonus_direct_call": 15,
         "bonus_pivot": 0,
         "bonus_syscall": 60,
+        "penalty_threshold": 50,
     }
     baseline_search = {"limit": 20, "darkness": 10, "d": 10, "i": 100, "m": 0}
     baseline = _eval_weights(df_arch, baseline_weights, baseline_search)

@@ -47,27 +47,27 @@ ARCH_PROFILES = {
         "pivot_always_mnems": frozenset(),
         "pivot_sp_mnems": frozenset({"mv", "c.mv", "addi", "c.addi"}),
         "stack_pointer_reg": "sp",
-        # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.989)
         "scoring_weights": {
           "base_score": 100,
-          "insn_penalty": 12,
-          "bonus_link_reg": 1,
-          "bonus_arg_reg": 1,
-          "bonus_frame_reg": 1,
-          "penalty_internal_call": 1,
-          "bonus_trampoline": 1,
-          "penalty_bad_ret": 854,
-          "bonus_direct_call": 35,
-          "bonus_pivot": 1,
-          "bonus_syscall": 123
-        },
+          "insn_penalty": 40,
+          "bonus_link_reg": 88,
+          "bonus_arg_reg": 50,
+          "bonus_frame_reg": 24,
+          "penalty_internal_call": 91,
+          "bonus_trampoline": 23,
+          "penalty_bad_ret": 562,
+          "bonus_direct_call": 14,
+          "bonus_pivot": 45,
+          "bonus_syscall": 118,
+          "penalty_threshold": 68
+},
         "search_params": {
-          "limit": 5,
-          "darkness": 14,
-          "d": 17,
-          "i": 44,
-          "m": 19
-        },
+          "limit": 64,
+          "darkness": 8,
+          "d": 15,
+          "i": 134,
+          "m": 33
+},
     },
     "x86_64": {
         "name": "x86-64",
@@ -107,27 +107,27 @@ ARCH_PROFILES = {
             {"xchg", "pop"}
         ),  # Rimosso 'mov' per evitare falsi positivi su prologhi funzione
         "stack_pointer_reg": "rsp",
-        # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.473)
         "scoring_weights": {
           "base_score": 100,
-          "insn_penalty": 140,
-          "bonus_link_reg": 1,
-          "bonus_arg_reg": 1,
-          "bonus_frame_reg": 1,
-          "penalty_internal_call": 1,
-          "bonus_trampoline": 1,
-          "penalty_bad_ret": 649,
-          "bonus_direct_call": 10,
-          "bonus_pivot": 1,
-          "bonus_syscall": 0
-        },
+          "insn_penalty": 60,
+          "bonus_link_reg": 4,
+          "bonus_arg_reg": 114,
+          "bonus_frame_reg": 47,
+          "penalty_internal_call": 159,
+          "bonus_trampoline": 56,
+          "penalty_bad_ret": 530,
+          "bonus_direct_call": 8,
+          "bonus_pivot": 137,
+          "bonus_syscall": 62,
+          "penalty_threshold": 53
+},
         "search_params": {
-            "limit": 5,
-            "darkness": 6,
-            "d": 12,
-            "i": 128,
-            "m": 21
-        },
+          "limit": 5,
+          "darkness": 2,
+          "d": 17,
+          "i": 192,
+          "m": 23
+},
     },
     "x86_32": {
         "name": "x86-32",
@@ -161,27 +161,27 @@ ARCH_PROFILES = {
         "pivot_always_mnems": frozenset({"leave"}),
         "pivot_sp_mnems": frozenset({"xchg", "pop"}),
         "stack_pointer_reg": "esp",
-        # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.700)
         "scoring_weights": {
           "base_score": 100,
-          "insn_penalty": 21,
-          "bonus_link_reg": 1,
-          "bonus_arg_reg": 1,
-          "bonus_frame_reg": 1,
-          "penalty_internal_call": 1,
-          "bonus_trampoline": 1,
-          "penalty_bad_ret": 738,
-          "bonus_direct_call": 15,
-          "bonus_pivot": 1,
-          "bonus_syscall": 56
-        },
+          "insn_penalty": 1,
+          "bonus_link_reg": 51,
+          "bonus_arg_reg": 63,
+          "bonus_frame_reg": 22,
+          "penalty_internal_call": 24,
+          "bonus_trampoline": 34,
+          "penalty_bad_ret": 660,
+          "bonus_direct_call": 26,
+          "bonus_pivot": 78,
+          "bonus_syscall": 106,
+          "penalty_threshold": 42
+},
         "search_params": {
-          "limit": 5,
-          "darkness": 9,
-          "d": 13,
-          "i": 35,
-          "m": 9
-        },
+          "limit": 98,
+          "darkness": 20,
+          "d": 7,
+          "i": 104,
+          "m": 15
+},
     },
     "arm64": {
         "name": "ARM64 (AArch64)",
@@ -201,27 +201,27 @@ ARCH_PROFILES = {
         "pivot_always_mnems": frozenset(),
         "pivot_sp_mnems": frozenset({"mov", "add", "sub"}),
         "stack_pointer_reg": "sp",
-        # Optuna unified, dataset v14, 26 groups, 200 trials (NDCG@5 improved +0.384)
         "scoring_weights": {
           "base_score": 100,
-          "insn_penalty": 15,
-          "bonus_link_reg": 1,
-          "bonus_arg_reg": 1,
-          "bonus_frame_reg": 1,
-          "penalty_internal_call": 1,
-          "bonus_trampoline": 1,
-          "penalty_bad_ret": 685,
-          "bonus_direct_call": 0,
-          "bonus_pivot": 1,
-          "bonus_syscall": 127
-        },
+          "insn_penalty": 42,
+          "bonus_link_reg": 98,
+          "bonus_arg_reg": 69,
+          "bonus_frame_reg": 48,
+          "penalty_internal_call": 135,
+          "bonus_trampoline": 3,
+          "penalty_bad_ret": 636,
+          "bonus_direct_call": 23,
+          "bonus_pivot": 54,
+          "bonus_syscall": 146,
+          "penalty_threshold": 29
+},
         "search_params": {
-          "limit": 5,
-          "darkness": 4,
-          "d": 12,
-          "i": 164,
-          "m": 29
-        },
+          "limit": 43,
+          "darkness": 16,
+          "d": 17,
+          "i": 75,
+          "m": 8
+},
 
     },
 }

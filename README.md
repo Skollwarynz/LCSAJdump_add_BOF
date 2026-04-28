@@ -39,10 +39,10 @@ LCSAJdump overcomes this limitation by reconstructing the **Control-Flow Graph (
 
 * **Multi-Architecture Support:** Native support for RISC-V (64GC), x86-64, and ARM64, easily extendable to other architectures via modular profiles.
 * **Graph-Based Analysis:** Segments the `.text` section into LCSAJ basic blocks and reconstructs flow relationships using `NetworkX`.
-* **Rainbow BFS Algorithm:** Proprietary backward Breadth-First Search starting from control-flow sinks. Now features an **O(1) Early-Drop Uniqueness Filter** and **Hard-Cap Instruction Limits** to prevent state explosion and ensure ultra-fast analysis even on dense CISC binaries.
+* **Rainbow BFS Algorithm:** Proprietary backward Breadth-First Search starting from control-flow sinks. Now features a qualitative feedback loop (`penalty_threshold` darkness) and Hard-Cap limits to prevent state explosion and ensure ultra-fast analysis even on dense CISC binaries.
 * **Lazy Graph Build:** Graph construction retains only nodes reachable from gadget tails within `--depth` hops, drastically reducing memory and build time on large binaries (e.g., `libc`) while producing **identical results**.
 * **Two-Stage Ranking Engine:** Combines a hyper-fast heuristic baseline (Bayesian-optimized via Optuna) with a deep-learning **LightGBM ML model** that refines gadget quality using structural and semantic features.
-* **Zero-Overhead Inference:** The ML model is integrated natively and runs by default, processing tens of thousands of nodes in seconds. It acts as a highly effective filter, rejecting noisy jumps and returning clean, highly controllable gadget chains. Hosted on [Hugging Face](https://huggingface.co/chris1sflaggin/chainfinder_v4_hybrid).
+* **Zero-Overhead Inference:** The ML model is integrated natively and runs by default, processing tens of thousands of nodes in seconds. It acts as a highly effective filter, rejecting noisy jumps and returning clean, highly controllable gadget chains. Hosted on [Hugging Face](https://huggingface.co/chris1sflaggin/chainfinder_v5_hybrid).
 * **Pruning Parameters:** Configurable "Darkness" factor to balance analysis depth and performance, preventing infinite loops in cyclic graphs.
 
 ---
@@ -153,9 +153,9 @@ lcsajdump --algo <path_to_binary>
 
 LCSAJdump is backed by a rigorous, incrementally validated test suite located in the `benchmarkTests/` directory.
 
-Through 14 major iterations of semantic feature engineering, the hybrid model has learned to discriminate gadgets based on actual memory side-effects (extracted via `angr` symbolic execution) rather than purely syntactic heuristics. 
+Through 15 major iterations of semantic feature engineering, the hybrid model has learned to discriminate gadgets based on actual memory side-effects (extracted via `angr` symbolic execution) rather than purely syntactic heuristics. 
 
-When evaluated on monolithic, real-world executables like `libc.so.6`, the engine achieves a mathematically near-perfect **NDCG@1 = 0.9833** and **NDCG@10 = 0.9656**. The Two-Stage engine successfully prioritizes clean stack-popping sequences and `ret2csu`-like calls, while heavily penalizing crash-prone fixed-offset jumps that deceive traditional static scanners.
+When evaluated on monolithic, real-world executables like `libc.so.6`, the engine achieves a mathematically near-perfect **NDCG@1 = 0.8549** and **NDCG@5 = 0.8374**. The Two-Stage engine successfully prioritizes clean stack-popping sequences and `ret2csu`-like calls, while heavily penalizing crash-prone fixed-offset jumps that deceive traditional static scanners.
 
 ---
 
@@ -163,7 +163,7 @@ When evaluated on monolithic, real-world executables like `libc.so.6`, the engin
 
 The repository is structured to support both end-users and ML researchers.
 
-* **Production Engine:** The core CLI seamlessly integrates the inference engine using models hosted on [Hugging Face](https://huggingface.co/chris1sflaggin/chainfinder_v4_hybrid), requiring no manual model loading.
+* **Production Engine:** The core CLI seamlessly integrates the inference engine using models hosted on [Hugging Face](https://huggingface.co/chris1sflaggin/chainfinder_v5_hybrid), requiring no manual model loading.
 * **ML Pipeline:** The `lcsajdump/ml_study/` directory contains the complete pipeline used to train the models:
   * `build_dataset.py`: Extracts structural and semantic features from a corpus of CTF binaries.
   * `train_model.py`: Trains the LightGBM LambdaRank model and outputs the `.pkl` models.
