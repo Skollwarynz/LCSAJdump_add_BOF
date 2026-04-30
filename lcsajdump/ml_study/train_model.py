@@ -153,7 +153,7 @@ def train_pipeline(
     groups: list[int],
     params: Optional[dict] = None,
     val_fraction: float = 0.2,
-    model_output: str = "chainfinder_v5_hybrid.pkl",
+    model_output: str = "gadget_model.pkl",
     meta: Optional[list[dict]] = None,
 ) -> tuple:
     """
@@ -420,7 +420,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Train lcsajdump gadget ML scorer")
-    parser.add_argument("--out", default="chainfinder_v5_hybrid.pkl", help="Output model path")
+    parser.add_argument("--out", default="gadget_model.pkl", help="Output model path")
     parser.add_argument(
         "--csv", default=None, help="Pre-built CSV dataset (skips running lcsajdump)"
     )

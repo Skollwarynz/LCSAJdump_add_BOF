@@ -131,15 +131,9 @@ class RainbowFinder:
                 queue.append((t["start"], (t["start"],), {t["start"]}, insn_count))
 
         node_darkness = collections.defaultdict(int)
-        visit_counts = collections.defaultdict(int)
-        
-        penalty_threshold = self.weights.get("penalty_threshold", 50)
-        hard_visit_limit = 1000
-
         pruned_darkness = 0
         pruned_insns = 0
         pruned_depth = 0
-        hard_limit_drops = 0
         duplicate_merges = 0
 
         while queue:
@@ -162,58 +156,40 @@ class RainbowFinder:
                     self.grouped_gadgets[sig]["addresses"].add(start_addr)
                     duplicate_merges += 1
 
-            is_terminated = False
-            valid_parents = 0
-
             if len(path_tuple) >= self.MAX_DEPTH:
-                is_terminated = True
                 pruned_depth += len(self.gm.reverse_graph.get(head, []))
-            else:
-                for parent in self.gm.reverse_graph.get(head, []):
-                    if parent in visited:
-                        continue
-                    
-                    if visit_counts[parent] >= hard_visit_limit:
-                        hard_limit_drops += 1
-                        continue
+                continue
 
-                    parent_node = self.gm.addr_to_node[parent]
-                    new_total_insns = total_insns + len(parent_node["insns"])
+            for parent in self.gm.reverse_graph.get(head, []):
+                if parent in visited:
+                    continue
 
-                    if new_total_insns > self.MAX_INSNS:
-                        pruned_insns += 1
-                        continue
+                parent_node = self.gm.addr_to_node[parent]
+                new_total_insns = total_insns + len(parent_node["insns"])
 
-                    if node_darkness[parent] >= self.MAX_DARKNESS:
-                        pruned_darkness += 1
-                        continue
+                if new_total_insns > self.MAX_INSNS:
+                    pruned_insns += 1
+                    continue
 
-                    valid_parents += 1
-                    visit_counts[parent] += 1
+                if node_darkness[parent] >= self.MAX_DARKNESS:
+                    pruned_darkness += 1
+                    continue
 
-                    new_path = (parent,) + path_tuple
-                    new_visited = visited.copy()
-                    new_visited.add(parent)
+                node_darkness[parent] += 1
 
-                    queue.append((parent, new_path, new_visited, new_total_insns))
+                new_path = (parent,) + path_tuple
+                new_visited = visited.copy()
+                new_visited.add(parent)
 
-            if is_terminated or valid_parents == 0:
-                score = self.score_gadget(path_tuple)
-                if score < (self.base_score - penalty_threshold):
-                    for addr in path_tuple:
-                        node_darkness[addr] += 1
+                queue.append((parent, new_path, new_visited, new_total_insns))
 
-        total_pruned = pruned_darkness + pruned_insns + pruned_depth + hard_limit_drops
+        total_pruned = pruned_darkness + pruned_insns + pruned_depth
         print(
-            f"[*] Pruning: {total_pruned} branches total | {pruned_darkness} darkness | {pruned_insns} insn limit | {pruned_depth} depth limit | {hard_limit_drops} hard limit | {duplicate_merges} duplicates merged."
+            f"[*] Pruning: {total_pruned} branches total | {pruned_darkness} darkness | {pruned_insns} insn limit | {pruned_depth} depth limit | {duplicate_merges} duplicates merged."
         )
         if pruned_darkness > pruned_insns + pruned_depth and pruned_darkness > 0:
             print(
                 f"[\033[33m!\033[0m] High darkness pruning. Consider increasing -k (current: {self.MAX_DARKNESS})."
-            )
-        if hard_limit_drops > 0:
-            print(
-                f"[\033[33m!\033[0m] Hard visit limit triggered {hard_limit_drops} times. Graph is highly connected."
             )
         self.gadgets = [g["path"] for g in self.grouped_gadgets.values()]
         return self.gadgets

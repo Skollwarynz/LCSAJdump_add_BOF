@@ -47,7 +47,7 @@ _DEFAULTS = {
 NDCG_K = 5
 
 
-def run_lcsajdump(binary_path, arch, depth, darkness, instructions, min_score, penalty_threshold,
+def run_lcsajdump(binary_path, arch, depth, darkness, instructions, min_score,
                   all_exec, old=False):
     """Esegue la CLI lcsajdump-dbg e restituisce i risultati JSON."""
     cmd = [
@@ -59,21 +59,13 @@ def run_lcsajdump(binary_path, arch, depth, darkness, instructions, min_score, p
         "--min-score", str(min_score),
         "--arch", arch,
     ]
-    # Here we would normally pass penalty_threshold to the CLI if it supports it.
-    # If the CLI doesn't support it directly yet, you might need to add a CLI flag for it,
-    # or export it via env var. Assuming we add an env var or a flag in lcsajdump-dbg later,
-    # for now we will just pass it to the function and maybe append to cmd if implemented.
-    # We will pass it via an env var hack for now to avoid modifying the CLI arg parser unless requested.
-    env = os.environ.copy()
-    env["LCSAJ_PENALTY_THRESHOLD"] = str(penalty_threshold)
-    
     if all_exec:
         cmd.append("--all-exec")
     if old:
         cmd.append("--old")
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=env)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
         if result.returncode != 0:
             return None
 
@@ -86,13 +78,13 @@ def run_lcsajdump(binary_path, arch, depth, darkness, instructions, min_score, p
         return None
 
 
-def _eval_params(test_cases, arch, depth, darkness, instructions, min_score, penalty_threshold, old):
+def _eval_params(test_cases, arch, depth, darkness, instructions, min_score, old):
     """Calcola NDCG@K medio per un set di parametri BFS."""
     ndcg_vals = []
 
     for tc in test_cases:
         data = run_lcsajdump(
-            tc['binary'], arch, depth, darkness, instructions, min_score, penalty_threshold,
+            tc['binary'], arch, depth, darkness, instructions, min_score,
             tc['all_exec'], old=old,
         )
         if not data:
@@ -159,7 +151,6 @@ def make_objective(samples, arch):
         darkness=_DEFAULTS['darkness'],
         instructions=_DEFAULTS['instructions'],
         min_score=_DEFAULTS['min_score'],
-        penalty_threshold=50,
         old=_DEFAULTS['old'],
     )
     print(f"[optuna_bfs] Baseline NDCG@{NDCG_K} (default params) = {baseline:.4f}")
@@ -169,11 +160,10 @@ def make_objective(samples, arch):
         darkness     = trial.suggest_int('darkness',     1,  20)
         instructions = trial.suggest_int('instructions', 3,  30)
         min_score    = trial.suggest_int('min_score',    0, 100)
-        penalty_threshold = trial.suggest_int('penalty_threshold', 20, 80)
         old          = trial.suggest_categorical('old', [False, True])
 
         return _eval_params(
-            test_cases, arch, depth, darkness, instructions, min_score, penalty_threshold, old
+            test_cases, arch, depth, darkness, instructions, min_score, old
         )
 
     return objective, baseline

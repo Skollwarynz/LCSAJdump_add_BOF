@@ -51,7 +51,7 @@ Simply run the tool against a binary:
 python3 -m lcsajdump.cli /path/to/binary
 ```
 If the model is present, LCSAJdump will automatically activate the **ML re-ranking** engine and output:
-`[+] ML re-ranking active (chainfinder_v5_hybrid.pkl)`
+`[+] ML re-ranking active (gadget_model.pkl)`
 
 *(To disable the ML engine and fall back to pure static heuristics, use the `--algo` flag).*
 

@@ -22,7 +22,7 @@ def main():
     for col in FEATURE_NAMES:
         if col not in df.columns: df[col] = 0
 
-    with open("chainfinder_v5_hybrid.pkl", "rb") as f:
+    with open("gadget_model.pkl", "rb") as f:
         data = pickle.load(f)
         model = data['model'] if isinstance(data, dict) and 'model' in data else data
 
